@@ -61,7 +61,7 @@ class SpoonParserTest {
         SpoonAstModel spoonAstModel = parseAstModelFromJavaFixtureResource(TYPE_USE_ANNOTATIONS);
 
         // Then
-        assertThat(spoonAstModel.getAnnotationSrcGroups())
+        assertThat(spoonAstModel.getOriginalAnnotationSrcGroups())
                 .filteredOn(group -> group.getStart() == firstDimensionStart
                         || group.getStart() == secondDimensionStart
                         || group.getStart() == receiverStart)

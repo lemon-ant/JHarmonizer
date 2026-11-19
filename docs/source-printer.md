@@ -5,16 +5,43 @@ SPDX-License-Identifier: Apache-2.0
 
 # Source printer
 
+```mermaid
+flowchart LR
+    Parser[SpoonParser] --> Model[SpoonAstModel]
+    Model --> Sorter
+    Sorter --> Result[SortingResult]
+    Result -->|post-sort model and sorted orders| Flow[AbstractSrcProcessingFlow]
+    Flow -->|SpoonPrintingInput| Translator[SrcAstTranslator.serialize]
+    Config[PrinterConfig] --> Translator
+    Translator --> Printer[SpoonSrcPrinter]
+```
+
 `SpoonParser` stores the original source, annotation fragments, and opt-outs in `SpoonAstModel`.
-The flow retains its immutable `PrinterConfig` and passes it to `SrcAstTranslator.serialize(model, printerConfig)`.
-The translator forwards the model and settings to the stateless `SpoonSrcPrinter`; no printer instance is stored.
-The same parsed model can be serialized with different settings without reparsing or retaining settings in the model.
+`SpoonSorter` returns selected annotation orders and the declaration-change flag; public `SortingResult` adds the
+supplied model after in-place sorting, requested member diagnostics, and timing. The returned `sortedSpoonAstModel`
+is the same context instance, with its current declaration order. Sorting has no dependency on the printer or its input
+model. Immediately before serialization, `AbstractSrcProcessingFlow` takes the model and orders from `SortingResult`
+to assemble one `SpoonPrintingInput` containing the source groups, working AST, source text/path, skipped types, and
+selected annotation orders needed by printing. The parsed model keeps no sorted annotation-order map and is not copied
+to attach sorting output. File-level opt-outs that reuse source text bypass sorting and printing without creating
+this input.
+The flow retains its immutable `PrinterConfig` and passes it to
+`SrcAstTranslator.serialize(printingInput, printerConfig)`. The translator forwards that input and settings to the
+stateless `SpoonSrcPrinter`; no printer instance is stored. The same printing input can be serialized with different
+settings without reparsing or retaining settings in the model. Direct printing without sorting uses an empty selected
+annotation-order map.
+The printing input shares the original groups and current Spoon nodes. Declaration order still changes in place;
+this context is not an independent AST snapshot. Main-type context and the original-member snapshot remain in
+`SpoonAstModel` for other consumers rather than being passed to the printer.
+Source and opt-out views and the selected-order map are already read-only when handed off. The input retains them
+without a second wrapper or defensive copy; producers must not modify handed-off maps or fragment lists.
 The printer uses Spoon declarations and source positions; all output code belongs to this project.
 It neither inherits from Spoon printers nor regenerates declarations through `CtElement.toString()`.
 Parsing and sorting do not depend on printer settings.
 
 | Component | Responsibility |
 | --- | --- |
+| `SpoonPrintingInput` | Source and current AST context plus selected annotation orders, without diagnostics or configuration |
 | `SpoonSrcPrinter` | Stateless serialization entry point with explicit configuration |
 | `SpoonSrcPrinter.Serialization` | Per-call state, declaration layout, member spacing and boundaries, skipped-type ranges |
 | `SrcPrinterOutput` | Source slices and tails, annotation-group replacements, indentation, line separator detection, output offsets |
@@ -40,11 +67,12 @@ directly. Interior line endings remain unchanged; generated lines use the domina
 CRLF, LF, CR tie precedence. The complete serialized source is not cached.
 
 Each call creates a private `Serialization` with its own configuration reference, output buffer and range map.
-Configuration, source text, annotation order, skipped types and the Spoon AST come from the supplied model;
-the printer has no shared state. `SrcPrinterOutput` indexes each `AnnotationSrcGroup` by its original start.
+Source text, annotation order, skipped types and the Spoon AST come from `SpoonPrintingInput`; configuration is passed
+separately and the printer has no shared state. `SrcPrinterOutput` indexes each `AnnotationSrcGroup` by its original
+start.
 At a group boundary it delegates text joining to `AnnotationSrcGroupRenderer`, passing the optional selected order from
-`annotationOrderByGroupSrcStart`, and continues after the original group end. It does not decide separator ownership
-or inspect original source to prepare gap text.
+`sortedAnnotationSrcFragmentsByGroupSrcStart`, and continues after the original group end. It does not decide
+separator ownership or inspect original source to prepare gap text.
 The same range-copying method handles fragments inside types and entire files without declared types, including
 `package-info.java` and `module-info.java`, without adding whitespace to those files.
 The standalone `AnnotationSrcGroup` model owns its nested annotation, gap, and private base-fragment types.
@@ -72,7 +100,7 @@ require a table that grows quadratically with the group's size.
 The original groups and separate order map determine annotation output order; AST annotation lists retain their parsed
 order and provide annotation presence for spacing decisions and positions for declaration boundaries.
 The result wraps the collected map once. Later calls cannot alter earlier output or ranges, and
-calls for independent models may run concurrently with different configurations. Failed calls leave no shared state.
+calls for independent inputs may run concurrently with different configurations. Failed calls leave no shared state.
 
 Spoon 11.5.0 provides correct member positions for the existing enum lambda/body regressions. The old
 enum correction, which generated text and searched it with a regular expression, has been removed.

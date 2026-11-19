@@ -19,18 +19,18 @@ import lombok.NonNull;
 final class SrcPrinterOutput {
 
     @NonNull
-    private final Map<Integer, List<AnnotationSrcFragment>> annotationOrderByGroupSrcStart;
-
-    @NonNull
-    private final NavigableMap<Integer, AnnotationSrcGroup> annotationSrcGroupsBySrcStart = new TreeMap<>();
-
-    @NonNull
     // Each invocation owns a fresh buffer; capacity cannot accumulate across files.
     @SuppressWarnings("PMD.AvoidStringBufferField")
     private final StringBuilder buffer;
 
     @NonNull
     private final String lineSeparator;
+
+    @NonNull
+    private final NavigableMap<Integer, AnnotationSrcGroup> originalAnnotationSrcGroupsBySrcStart = new TreeMap<>();
+
+    @NonNull
+    private final Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart;
 
     @NonNull
     private final String srcCode;
@@ -42,12 +42,14 @@ final class SrcPrinterOutput {
 
     /**
      * Creates an output buffer using the original source's size and dominant line separator.
-     * @param model original source and immutable annotation fragments with optional selected orders
+     * @param printingInput original source and immutable annotation fragments with selected orders
      */
-    SrcPrinterOutput(@NonNull SpoonAstModel model) {
-        srcCode = model.getSrcCode();
-        annotationOrderByGroupSrcStart = model.getAnnotationOrderByGroupSrcStart();
-        model.getAnnotationSrcGroups().forEach(group -> annotationSrcGroupsBySrcStart.put(group.getStart(), group));
+    SrcPrinterOutput(@NonNull SpoonPrintingInput printingInput) {
+        srcCode = printingInput.getSrcCode();
+        sortedAnnotationSrcFragmentsByGroupSrcStart = printingInput.getSortedAnnotationSrcFragmentsByGroupSrcStart();
+        printingInput
+                .getOriginalAnnotationSrcGroups()
+                .forEach(group -> originalAnnotationSrcGroupsBySrcStart.put(group.getStart(), group));
         lineSeparator = detectDominantLineSeparator(srcCode);
         buffer = new StringBuilder(srcCode.length());
     }
@@ -105,7 +107,7 @@ final class SrcPrinterOutput {
      */
     void printSrcRange(int start, int endExclusive) {
         int cursor = start;
-        for (AnnotationSrcGroup group : annotationSrcGroupsBySrcStart
+        for (AnnotationSrcGroup group : originalAnnotationSrcGroupsBySrcStart
                 .subMap(start, true, endExclusive, false)
                 .values()) {
             if (group.getEndExclusive() > endExclusive) {
@@ -114,7 +116,7 @@ final class SrcPrinterOutput {
             }
             buffer.append(srcCode, cursor, group.getStart())
                     .append(AnnotationSrcGroupRenderer.renderReplacement(
-                            group, annotationOrderByGroupSrcStart.get(group.getStart())));
+                            group, sortedAnnotationSrcFragmentsByGroupSrcStart.get(group.getStart())));
             cursor = group.getEndExclusive();
         }
         buffer.append(srcCode, cursor, endExclusive);

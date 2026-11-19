@@ -33,10 +33,10 @@ public final class Sorter {
     }
 
     /**
-     * Reorders declarations in the working AST and returns a model with immutable sorted annotation groups.
+     * Reorders declarations in the shared AST and returns the same model with separate selected annotation orders.
      *
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
-     * @return the model for serialization, member diagnostics, change flags, and sorting statistics
+     * @return the working model after sorting, selected annotation orders, diagnostics, change flags, and statistics
      * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
      */
     @NonNull
@@ -48,7 +48,7 @@ public final class Sorter {
      * Sorts a parsed model once and prepares member diagnostics only when requested.
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
      * @param collectMemberRelocations whether the caller needs the detailed member report
-     * @return the model for serialization, requested diagnostics, change flags, and sorting statistics
+     * @return the working model after sorting, selected annotation orders, requested diagnostics, flags, and statistics
      * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
      */
     @NonNull
@@ -69,9 +69,9 @@ public final class Sorter {
         SortedContent sortedContent = sortingResult.getResult();
 
         return new SortingResult(
-                sortedContent.getSpoonSortingResult().isAnnotationsReordered(),
                 sortedContent.getMemberRelocations(),
                 sortedContent.getSpoonSortingResult().isMembersReordered(),
+                sortedContent.getSpoonSortingResult().getSortedAnnotationSrcFragmentsByGroupSrcStart(),
                 sortedContent.getSpoonSortingResult().getSortedSpoonAstModel(),
                 new SortingStatistic(sortingResult.getNanos()));
     }

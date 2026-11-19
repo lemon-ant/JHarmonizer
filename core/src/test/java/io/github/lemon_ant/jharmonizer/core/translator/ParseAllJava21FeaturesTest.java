@@ -12,7 +12,9 @@ import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonPrintingInput;
 import java.nio.file.Path;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ParseAllJava21FeaturesTest {
@@ -53,9 +55,10 @@ class ParseAllJava21FeaturesTest {
         // Given
         SpoonAstModel spoonASTModel = SpoonParser.parseJavaSrcFile(
                 createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
+        SpoonPrintingInput printingInput = new SpoonPrintingInput(spoonASTModel, Map.of());
 
         // When
-        SerializationResult serializationResult = SrcAstTranslator.serialize(spoonASTModel, DEFAULT_PRINTER_CONFIG);
+        SerializationResult serializationResult = SrcAstTranslator.serialize(printingInput, DEFAULT_PRINTER_CONFIG);
 
         // Then
         assertThat(serializationResult).isNotNull();

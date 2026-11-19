@@ -62,7 +62,7 @@ class SrcPrinterOutputTest {
     private static SrcPrinterOutput createOutputWithSortedAnnotations(String srcCode) {
         SpoonAstModel parsedModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
         Map<Integer, List<AnnotationSrcFragment>> annotationOrderByGroupSrcStart = sortAnnotationGroups(
-                parsedModel.getAnnotationSrcGroups(), Comparator.comparing(AnnotationDescriptor::getName));
-        return new SrcPrinterOutput(parsedModel.withAnnotationOrderByGroupSrcStart(annotationOrderByGroupSrcStart));
+                parsedModel.getOriginalAnnotationSrcGroups(), Comparator.comparing(AnnotationDescriptor::getName));
+        return new SrcPrinterOutput(new SpoonPrintingInput(parsedModel, annotationOrderByGroupSrcStart));
     }
 }

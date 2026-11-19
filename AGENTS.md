@@ -68,7 +68,10 @@ This file defines repository-wide conventions for coding agents working in this 
     or Markdown interpretation.
 - Create Git commits only when the user explicitly requests a commit for the current task. Authorization from a
   completed task does not carry over to a new task; otherwise leave changes uncommitted.
-- Record every dependency addition or update, functional change, and new feature in `CHANGELOG.md` in the same task.
+- Record user-visible features, fixes, compatibility changes, and significant performance changes in `CHANGELOG.md`
+  in the same task. Write for users and developers integrating JHarmonizer into builds. Include dependency updates
+  affecting compatibility, source processing, or security. Group related changes and omit implementation refactors,
+  internal API changes, test additions, and quality-gate details.
 - Licensing policy is mandatory for all tracked files in this repository.
   - Every tracked text/source/config/documentation file must include SPDX metadata.
   - Required file-level SPDX lines:
@@ -229,19 +232,29 @@ This file defines repository-wide conventions for coding agents working in this 
   state in local variables or private implementation state.
 - Keep processing-wide printer settings in the flow and pass them explicitly to serialization. Parsers and source
   models must not retain printer configuration.
+- Keep sorted annotation orders out of `SpoonAstModel`. Sorting processors return sorting data and metadata;
+  they must not depend on printers or construct printing inputs. Both `SpoonSorter.SpoonSortingResult` and public
+  `SortingResult` retain `sortedSpoonAstModel`, the supplied context after in-place AST sorting, beside the separate
+  sorted-order map. The facade forwards the nested result's model; subsequent stages read the public result.
+  Flows assemble `SpoonPrintingInput` immediately before serialization, retaining only source groups, working AST,
+  source text/path, skipped types, and selected annotation orders.
+  Do not copy the parsed model to attach sorting output. The returned model and printing context share mutable Spoon
+  nodes rather than providing AST snapshots.
 - Return requested member-relocation diagnostics plus independent `annotationsReordered` and `membersReordered` flags
   from sorting in `SortingResult`. `membersReordered` covers Spoon declaration order, including top-level types;
-  `annotationsReordered` covers source annotation fragments. Derive `isReordered()` as their OR without storing another
-  flag. Flows use this aggregate for status and sorting checks instead of recomputing changes from the AST.
+  `annotationsReordered` covers source annotation fragments and is derived from the sparse sorted-order map rather
+  than stored separately. Derive `isReordered()` as their OR without storing another flag. Flows use this aggregate for
+  status and sorting checks instead of recomputing changes from the AST.
 - Sort each freshly parsed shared AST only once per flow. Claim its shared `CtCompilationUnit` before the first sorting
   attempt, including unchanged and failed attempts; model views and clones of consumed units must not reset the claim.
   Detect final-order changes while collecting sorted output, after grouping and dependency repair, instead of traversing
   the completed AST again. Compute detailed member diagnostics only when declarations changed and the caller needs the
   report.
 - Preserve annotation source-group order during sorting; only annotation order inside each group may change.
-  Keep parsed groups and gaps unchanged. Store only changed orders in `annotationOrderByGroupSrcStart`, mapping each
-  original group start to existing annotation fragments in sorted order. Missing entries retain source order;
-  derive the annotation-change flag from map non-emptiness instead of comparing groups again.
+  Keep parsed groups and gaps unchanged. Store only changed orders in
+  `sortedAnnotationSrcFragmentsByGroupSrcStart` returned by sorting results, mapping each original group start to
+  existing annotation fragments in sorted order. The flow passes this same map to the printing input. Missing entries
+  retain source order; derive the annotation-change flag from map non-emptiness instead of comparing groups again.
 - When one timing statistic covers consecutive operations, measure them in a single `StopWatch.measure` call instead of
   summing separate measurements.
 - Keep annotation source models in the standalone `AnnotationSrcGroup` class beside the scanner in
@@ -383,6 +396,11 @@ This file defines repository-wide conventions for coding agents working in this 
     snapshot isolation for these criteria.
   - Exception: annotation source groups retain unmodifiable views without copying. Callers must not mutate the supplied
     lists after handoff; the scanner uses fresh lists for subsequent groups.
+  - Exception: sorting results and `SpoonPrintingInput` retain sorted annotation-order maps and fragment lists already
+    made read-only by their producers. The printing input also retains existing read-only source/opt-out views.
+    Producers must not modify handed-off collections; do not wrap or copy them again.
+    When SpotBugs cannot infer this verified read-only handoff, suppress only `EI_EXPOSE_REP2` on the relevant
+    constructor with a justification naming the producer's protection.
   - Exception: annotation dependency-key sets, resolver identity indexes, and prepared import contexts use unmodifiable
     views without defensive copies. Producers must not modify handed-off collections. Reuse already unmodifiable
     inputs when contents do not change; allocate new collections for transformed contents.

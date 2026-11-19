@@ -38,14 +38,15 @@ SrcFile (raw text + path)
 SpoonParser.parseJavaSrcFile(srcFile)
     ↓
 SpoonAstModel
-    ├─ CtCompilationUnit       (Spoon AST)
-    ├─ JHarmonizerOptOuts      (resolved file/type-scope opt-out directives)
-    ├─ originalMemberOrder     (DFS source-order snapshot of CtTypeMembers)
-    ├─ annotationSrcGroups     (immutable source fragments, gap layouts, and original replacement code)
-    ├─ annotationOrderByGroupSrcStart (empty during parsing; changed orders after sorting)
-    └─ srcCode                 (exact original text for source offsets)
+    ├─ CtCompilationUnit           (Spoon AST)
+    ├─ JHarmonizerOptOuts          (resolved file/type-scope opt-out directives)
+    ├─ originalMemberOrder         (DFS source-order snapshot of CtTypeMembers)
+    ├─ originalAnnotationSrcGroups (immutable source fragments, gap layouts, and original replacement code)
+    └─ srcCode                     (exact original text for source offsets)
     ↓
-Sorter → SpoonSrcPrinter → Formatter
+Sorter → SortingResult (same SpoonAstModel after sorting, selected orders, change flags, diagnostics, timing)
+    ↓
+Flow: SortingResult → SpoonPrintingInput → SpoonSrcPrinter → Formatter
 ```
 
 ## Key components
@@ -54,6 +55,7 @@ Sorter → SpoonSrcPrinter → Formatter
 |--------------------------------------|-------------------------------------------------------------------------------------------------------|
 | `SpoonParser`                        | Entry point. Wraps the source in a `VirtualFile`, builds a `Launcher` with `complianceLevel = 21`, and assembles the `SpoonAstModel`. |
 | `SpoonAstModel`                      | Typed processing context with the mutable Spoon AST, immutable annotation groups, original source, opt-outs, and source-order snapshot. |
+| `SpoonPrintingInput`                 | Post-parse printing context with the shared working AST, source data, skipped types, and selected annotation orders. |
 | `JHarmonizerOptOutResolver`          | Resolves file-scope and type-scope opt-out directives from the parsed `CtCompilationUnit`.            |
 | `SpoonTypeTreeUtils`                  | Traverses source type trees and enclosing types; captures the original DFS order of `CtTypeMember`s with `streamDeclaredHierarchy`. |
 | `SpoonSrcPrinter` / `SrcPrinterOutput` | Standalone source-fragment printing and member layout; see [source printer](source-printer.md). |
@@ -69,13 +71,17 @@ The neutral `core.spoon.SpoonTypeUtils` retains only main-type selection, effect
 source-member traversal used across processing stages.
 For the annotation identity algorithm, lookup precedence, stopping conditions, and worked examples, see
 [annotation type resolution](annotation-type-resolution.md) (in Russian).
-The groups belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates
-declaration order in the AST and returns a model wrapper with `annotationOrderByGroupSrcStart`: only changed groups map
-from their original start offsets to existing fragments in sorted order. The original groups and AST annotation lists
-remain unchanged. Printing consumes that returned model together with the flow's `PrinterConfig`;
-annotation order is neither stored in `CtCompilationUnit` metadata nor captured by a serialization supplier.
+The groups belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates declaration order
+in the shared AST and returns `sortedAnnotationSrcFragmentsByGroupSrcStart`: only changed groups map from their
+original start offsets to existing fragments in sorted order. Public `SortingResult` also retains the supplied context
+as `sortedSpoonAstModel`, making the post-sort model explicit without constructing a copy. The original groups and AST
+annotation lists remain unchanged. The flow takes both the model and selected orders from that result to assemble
+`SpoonPrintingInput` immediately before serialization. Printing consumes that input together with the flow's
+`PrinterConfig`; annotation order is neither stored in `SpoonAstModel` or `CtCompilationUnit` metadata nor captured by a
+serialization supplier. The printing input shares the working AST without copying the parsed model or snapshotting
+mutable nodes.
 Parsing does not depend on printer settings. The flow passes its immutable configuration to
-`SrcAstTranslator.serialize(model, printerConfig)` for each printing invocation.
+`SrcAstTranslator.serialize(printingInput, printerConfig)` for each printing invocation.
 The scanner collects annotations and gaps in separate lists with source bounds and comment ownership. The group
 constructor retains unmodifiable views; callers must not modify the lists after handoff. Group, gap, and layout
 construction and the annotation-fragment builder are package-private. The scanner starts fresh lists for each group

@@ -52,7 +52,7 @@ class RepeatableAnnotationAliasMatrixTest {
     void setUp() {
         // Parse once without modifying Spoon's model. The E2E runner compiles and executes this same fixture.
         List<AnnotationSrcGroup> annotationGroups =
-                parseAstModelFromJavaFixtureResource(FIXTURE).getAnnotationSrcGroups();
+                parseAstModelFromJavaFixtureResource(FIXTURE).getOriginalAnnotationSrcGroups();
         aliasPairGroups = annotationGroups.stream()
                 .filter(annotationGroup ->
                         annotationGroup.getAnnotationSrcFragmentsInSrcOrder().size() == 2)

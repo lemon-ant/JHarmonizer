@@ -43,20 +43,20 @@ class SpoonAnnotationSorter {
             @NonNull List<AnnotationSrcGroup> annotationSrcGroupsInSrcOrder,
             @NonNull Set<CtType<?>> sortingSkippedTypes,
             @NonNull Comparator<AnnotationDescriptor> annotationComparator) {
-        Map<Integer, List<AnnotationSrcFragment>> annotationOrderByGroupSrcStart = new HashMap<>();
+        Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart = new HashMap<>();
         for (AnnotationSrcGroup annotationSrcGroup : annotationSrcGroupsInSrcOrder) {
             ElementOrdering<AnnotationSrcFragment> annotationOrdering = sortAnnotationSrcFragments(
                     annotationSrcGroup.getAnnotationSrcFragmentsInSrcOrder(),
                     sortingSkippedTypes,
                     annotationComparator);
             if (annotationOrdering.isReordered()) {
-                annotationOrderByGroupSrcStart.put(
+                sortedAnnotationSrcFragmentsByGroupSrcStart.put(
                         annotationSrcGroup.getStart(), annotationOrdering.getElementsInSortedOrder());
             }
         }
-        return annotationOrderByGroupSrcStart.isEmpty()
+        return sortedAnnotationSrcFragmentsByGroupSrcStart.isEmpty()
                 ? Map.of()
-                : Collections.unmodifiableMap(annotationOrderByGroupSrcStart);
+                : Collections.unmodifiableMap(sortedAnnotationSrcFragmentsByGroupSrcStart);
     }
 
     private static boolean containsAnnotation(CtType<?> type, AnnotationSrcFragment annotationSrcFragment) {

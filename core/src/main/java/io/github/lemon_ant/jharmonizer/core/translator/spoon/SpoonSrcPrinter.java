@@ -41,21 +41,21 @@ public final class SpoonSrcPrinter {
     /**
      * Prints the current declaration order with independent state for each invocation.
      * Calls for independent models may run concurrently with different configurations.
-     * @param model working AST, annotation order, original source, and opt-outs
+     * @param printingInput working AST, selected annotation orders, original source, and excluded types
      * @param printerConfig the spacing configuration for this invocation
      * @return printed source and immutable skipped-type ranges, independent of subsequent calls
      */
     @NonNull
     public static SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(
-            @NonNull SpoonAstModel model, @NonNull PrinterConfig printerConfig) {
-        CtCompilationUnit compilationUnit = model.getCompilationUnit();
-        String srcCode = model.getSrcCode();
+            @NonNull SpoonPrintingInput printingInput, @NonNull PrinterConfig printerConfig) {
+        CtCompilationUnit compilationUnit = printingInput.getCompilationUnit();
+        String srcCode = printingInput.getSrcCode();
         if (SpoonTypeTreeUtils.hasNoDeclaredTypes(compilationUnit)) {
-            SrcPrinterOutput srcPrinterOutput = new SrcPrinterOutput(model);
+            SrcPrinterOutput srcPrinterOutput = new SrcPrinterOutput(printingInput);
             srcPrinterOutput.printSrcRange(0, srcCode.length());
             return new SerializedSrcWithSkippedTypeRanges(srcPrinterOutput.toString(), Map.of());
         }
-        return new Serialization(model, printerConfig).serializeCompilationUnit(compilationUnit);
+        return new Serialization(printingInput, printerConfig).serializeCompilationUnit(compilationUnit);
     }
 
     /** Confines mutable printing state to one invocation. */
@@ -83,10 +83,10 @@ public final class SpoonSrcPrinter {
                     || !member.getAnnotations().isEmpty();
         }
 
-        private Serialization(SpoonAstModel model, PrinterConfig printerConfig) {
-            srcPrinterOutput = new SrcPrinterOutput(model);
-            srcCode = model.getSrcCode();
-            sortingSkippedTypes = model.getOptOuts().getSortingSkippedTypes();
+        private Serialization(SpoonPrintingInput printingInput, PrinterConfig printerConfig) {
+            srcPrinterOutput = new SrcPrinterOutput(printingInput);
+            srcCode = printingInput.getSrcCode();
+            sortingSkippedTypes = printingInput.getSortingSkippedTypes();
             this.printerConfig = printerConfig;
         }
 

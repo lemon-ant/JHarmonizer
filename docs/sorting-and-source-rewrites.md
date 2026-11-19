@@ -7,13 +7,19 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Status and decision
 
-Deferred design, reviewed on 2026-09-21 against the working tree using Spoon 11.5.0. This document records analysis;
-the proposed pipeline and types are not implemented. Track implementation in
+The full ordered-content hierarchy remains deferred. The original design was reviewed on 2026-09-21 using Spoon
+11.5.0; the current pipeline already has an explicit `SpoonPrintingInput`, but still depends on mutable Spoon nodes.
+Track the remaining implementation in
 [the backlog](TODO.md#10-explicit-sorting-result-and-support-for-future-source-rewrites).
 
-The sorting facade now returns prepared member-relocation diagnostics in `SortingResult` as unmodifiable views without
-defensive copies and retains independent annotation and member flags with a computed aggregate. Producers must not
-mutate handed-off lists. The full ordered-content hierarchy and independence from mutable Spoon nodes remain deferred.
+The sorting facade returns the supplied model after in-place sorting and prepared member-relocation diagnostics in
+`SortingResult`, retaining diagnostics as unmodifiable views without defensive copies. It also exposes independent
+annotation and member flags with a computed aggregate. Producers must not mutate handed-off lists. The full
+ordered-content hierarchy and independence from mutable Spoon nodes remain deferred.
+The flow creates `SpoonPrintingInput` from the model and annotation orders in `SortingResult`. The input retains
+the current AST, original source groups, source text/path, skipped types, and sparse sorted annotation orders.
+Sorting results contain no printing context. The input shares existing references without copying the parsed model
+or snapshotting the AST.
 
 The direction is to return one explicit ordering model instead of combining a mutated Spoon AST with
 separately returned annotation orders. Extend this direction to support code transformations before sorting.
@@ -30,10 +36,11 @@ and attached annotation fragments that the custom printer can consume directly. 
 
 | Current component | Observable behavior |
 | --- | --- |
-| `SpoonSorter.sortCompilationUnitRecursively` | Mutates declaration lists once and returns the model with a sparse annotation-order map and final-order change flags. |
+| `SpoonSorter.sortCompilationUnitRecursively` | Mutates declaration lists once and returns a sparse annotation-order map and the declaration-change flag. |
 | `SpoonAnnotationSorter` | Returns changed orders of existing lexical fragments by original group start. Source groups, gaps, and AST annotation lists remain unchanged. |
 | `GroupBoundaryMarker` | Stores separator instructions in metadata on the first member of each group. |
-| `Sorter.sort` | Returns the sorted model, unmodifiable member-relocation lists, independent annotation and member flags with a computed aggregate, and timing; the input and result wrappers share the mutable Spoon AST. |
+| `Sorter.sort` | Returns the supplied model after in-place sorting, selected annotation orders, unmodifiable member-relocation lists, independent annotation and member flags with a computed aggregate, and timing. |
+| `AbstractSrcProcessingFlow` | Combines the model and annotation orders in `SortingResult` into `SpoonPrintingInput` only when serialization is needed. |
 | `SpoonSrcPrinter` | Reads current Spoon members, positions, annotation presence, and separator metadata while copying source. |
 | `RelocationDetector` | Computes minimal declaration relocation reports from the original snapshot when check flows need diagnostics. |
 
@@ -45,7 +52,8 @@ applies the comparator and prepared constraints during sorting. The shared
 [`AnnotationSrcGroup`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java)
 stays beside the scanner to restrict initial group and fragment construction to that package, despite consumers in
 sorting and printing. The scanner creates immutable source groups and prepares gap layouts for separator requirements
-zero, one, and two. The sorter stores only changed fragment orders in `annotationOrderByGroupSrcStart`.
+zero, one, and two. The sorter returns only changed fragment orders in `sortedAnnotationSrcFragmentsByGroupSrcStart`;
+the flow passes that same map to the printing input. `SpoonAstModel` retains no post-sort order field.
 `AnnotationSrcGroupRenderer` joins existing fragments with these layouts; source models are never reconstructed.
 Parser-wide type-tree traversal uses
 [`SpoonTypeTreeUtils`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeTreeUtils.java).
@@ -95,9 +103,10 @@ The following names describe responsibilities, not committed Java classes:
 | Ordered scope/group | Ordered members, nested scopes, and separator requests that previously lived in metadata. |
 | Sorting result | One complete ordered hierarchy, source provenance, diagnostic facts, and statistics. |
 
-The existing facade already accepts `SpoonAstModel`; a new input wrapper is useful only if it establishes the stronger
-contract that AST, fragments, and indices belong to one source revision. Adding a wrapper solely to hide three method
-arguments would not solve the underlying issue. Prepare source relationships once before sorting, rather than adding
+The sorting facade already accepts `SpoonAstModel`; a new sorting-input wrapper would be useful only if it establishes
+the stronger contract that AST, fragments, and indices belong to one source revision. The implemented
+`SpoonPrintingInput` has a narrower role: it separates serialization data from parsing state and sorting diagnostics,
+but does not establish revision isolation. Prepare source relationships once before sorting, rather than adding
 another printer-only scan of the same relationships.
 
 Optional `CtTypeMember` references are an acceptable migration compromise. Document such a result as having immutable

@@ -1529,10 +1529,12 @@ dedicated review pass.
 
 #### Problem and direction
 
-`SpoonSorter` mutates declaration order in the Spoon AST, writes group separators to member
-metadata, and returns a model wrapper with immutable annotation groups. The returned `SpoonAstModel` shares the mutable
-AST with its input, so later sorting can affect earlier models. `SortingResult` separately retains member diagnostics;
-it does not yet isolate declaration order or separator metadata.
+`SpoonSorter` mutates declaration order in the Spoon AST, writes group separators to member metadata, and returns a
+separate map of selected annotation orders. `SpoonAstModel` retains no post-sort annotation map and is not copied to
+carry sorting output. Public `SortingResult` retains that same model as `sortedSpoonAstModel`, the selected annotation
+orders, and member diagnostics. The flow takes the model and orders from the result to assemble `SpoonPrintingInput`
+only when serialization is needed; sorting constructs no printing context.
+This still does not isolate declaration order or separator metadata from external AST mutation.
 Annotation order is already computed only for source-fragment groups; AST annotation lists remain unchanged.
 
 Return one explicit hierarchy containing ordered scopes, member groups, separators, annotation content, source slices,
@@ -1572,7 +1574,7 @@ P3 covers naming and readability. All 22 items are resolved.
 | 4 | P2 | `SpoonAstModel.printerConfig` | Keep printer settings in the flow and pass them explicitly to serialization. | Resolved |
 | 5 | P2 | `RelocationDetector.findRelocations` | Return unmodifiable member-relocation diagnostics in `SortingResult`. | Resolved |
 | 6 | P2 | `SortingResult.isReordered` | Derive the combined change flag from independent annotation and member flags. | Resolved |
-| 7 | P2 | `SortingResult.annotationsReordered` | Return the annotation-order change flag from sorting. | Resolved |
+| 7 | P2 | `SortingResult.isAnnotationsReordered` | Derive the annotation-order change flag from selected orders. | Resolved |
 | 8 | P2 | `OrderChangeCollector` | Detect final-order changes during output collection under the single-sort model contract. | Resolved |
 | 14 | P2 | `Sorter.sort` | Emit change flags during sorting and compute minimal member reports only when needed. | Resolved |
 | 15 | P2 | `SpoonSorter.sortCompilationUnitRecursively` / `SpoonAstModel` | Reject repeated sorting through any wrapper sharing the same AST, including an unchanged first sort. | Resolved |
@@ -1581,7 +1583,7 @@ P3 covers naming and readability. All 22 items are resolved.
 | 10 | P3 | `AbstractSrcProcessingFlow` | Name the shared abstraction after the source-processing pipeline it implements. | Resolved |
 | 11 | P3 | `AbstractSrcProcessingFlow.checkSortingThenFormattingIfOrdered` | Make the sorting-first check and formatting short-circuit clear in its name. | Resolved |
 | 12 | P3 | `AbstractSrcProcessingFlow.checkSortingThenFormattingIfOrdered` result construction | Extract the annotation diff into a descriptive local variable. | Resolved |
-| 13 | P3 | `Sorter.sort` | Remove nested group assembly by returning the updated model from `SpoonSorter`. | Resolved |
+| 13 | P3 | `Sorter.sort` | Return selected annotation orders from `SpoonSorter` without assembling source groups or printer context. | Resolved |
 | 17 | P3 | `SpoonAnnotationSorter.sort` parameters | Put source groups first and sorting opt-outs second. | Resolved |
 | 18 | P3 | `SpoonAnnotationSorter.sort` result | Preserve group slots and collect the aggregate annotation-change flag directly. | Resolved |
 | 19 | P3 | `SpoonSorter.sortTypeRecursively` | Skip 0–1-member scopes before building a graph or result wrapper. | Resolved |
@@ -1611,14 +1613,15 @@ Item 2 is resolved by retaining the existing lexer. The
 evidence, alternatives, and regression coverage. AST annotation positions cannot define the scan boundaries while they
 omit supported source groups. This decision adds no parsing pass or dependency and changes no sorting behavior.
 
-Item 3 is resolved by passing `SpoonAstModel` into `SpoonSorter` and returning the model with sorted annotation groups.
+Item 3 is resolved by passing `SpoonAstModel` into `SpoonSorter` and returning only selected orders and change facts.
 The sorter obtains the Spoon AST, skipped types, and annotation groups from that model. This also resolves item 13:
-`Sorter` times one sorting call without assembling annotation groups. The benchmark copies the Spoon AST together
-with its matching model state; its existing shared-type limitation is documented in [benchmark.md](benchmark.md).
+`Sorter` times one sorting call without assembling annotation groups or printing context. The flow builds the printing
+input from the model and orders in `SortingResult`. The benchmark copies the Spoon AST together with its matching
+model state; its existing shared-type limitation is documented in [benchmark.md](benchmark.md).
 
 Item 4 is resolved by removing printer configuration from parsing and `SpoonAstModel`. Each flow supplies its immutable
-settings to serialization. A printer test reuses the same parsed model with different settings and verifies that returning
-to the original settings reproduces the original output.
+settings to serialization. A printer test reuses the same printing input with different settings and verifies that
+returning to the original settings reproduces the original output.
 
 Item 5 is resolved at the sorting facade boundary: requested member-relocation diagnostics are returned before
 serialization, and check flows consume them directly. The LIS pass preserves minimal moved-member selection, chunk
@@ -1626,7 +1629,8 @@ grouping, and sorted-order neighbours. Its time is included in sorting statistic
 unmodifiable views without copies; producers must not mutate handed-off lists.
 
 Items 6 and 7 are resolved by returning independent `SortingResult.membersReordered` and `annotationsReordered` flags.
-The first covers Spoon declarations, including top-level types; the second covers source annotation fragments.
+The first covers Spoon declarations, including top-level types; the second covers source annotation fragments and is
+derived from the sparse sorted-order map.
 `isReordered()` derives their OR for status and sorting violations, while the annotation flag selects source diffs.
 Skipped sorting returns `false` for both flags. Tests cover all four flag combinations, disabled sorting, declarations
 without printable diagnostics, formatting-only statuses, and check-flow behavior.
@@ -1644,12 +1648,14 @@ the detailed member report only when declarations changed; reordering and annota
 The parse-time snapshot remains available for member diagnostics.
 
 Item 15 is resolved by atomically claiming the shared `CtCompilationUnit` model in `SpoonSorter` before the first
-sorting attempt. Input, pre-existing, and returned model views observe the same metadata. Both sorting entry points
+sorting attempt. Input and pre-existing model views observe the same metadata. Both sorting entry points
 reject a second attempt after unchanged or failed sorting; clones of consumed models retain the claim. Reparsing creates
 an independent lifecycle. Tests cover these aliases, mixed entry points, failures, cloning, and reparsing.
 
-Item 16 is resolved by retaining primitive invocation change flags in `SpoonSortingResult` and `SortingResult`.
-The stage result carries known flags after successful sorting; `SpoonAstModel` keeps no nullable post-sort fields.
+Item 16 is resolved by retaining invocation change facts in `SpoonSortingResult` and `SortingResult`.
+Both derive the annotation-change flag from the sparse order map and retain the declaration-change flag. The nested
+result returns the supplied model after sorting; the facade forwards that returned model into public `SortingResult`.
+Neither creates a printing context, and `SpoonAstModel` keeps no post-sort annotation-order or flag fields.
 This preserves the result contract without partial flag states or converting an unknown result to false.
 The shared AST claim continues to enforce the sorting lifecycle independently of result flags.
 

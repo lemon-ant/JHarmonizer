@@ -258,7 +258,7 @@ class AnnotationSourceScannerTest {
         // When
         List<AnnotationSrcGroup> annotationGroupsInSrcOrder = parseAstModelFromJavaFixtureResource(
                         ANNOTATION_GROUP_KEY_SCOPE_FIXTURE)
-                .getAnnotationSrcGroups();
+                .getOriginalAnnotationSrcGroups();
 
         // Then
         assertThat(annotationGroupsInSrcOrder.stream()

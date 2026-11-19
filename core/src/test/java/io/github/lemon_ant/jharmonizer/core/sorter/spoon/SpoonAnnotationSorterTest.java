@@ -73,7 +73,7 @@ class SpoonAnnotationSorterTest {
         compiledConfig =
                 Unified2CompiledModelCompiler.compile(JHarmonizerConfigurationManager.parseUnifiedDefaultConfig());
         externalInheritedAliasesModel = parseAstModelFromJavaFixtureResource(EXTERNAL_INHERITED_ALIASES);
-        sourceGroups = parseAstModelFromJavaFixtureResource(GROUP_INPUT).getAnnotationSrcGroups();
+        sourceGroups = parseAstModelFromJavaFixtureResource(GROUP_INPUT).getOriginalAnnotationSrcGroups();
         expectedReplacementCodes = scanAnnotationSrcGroups(readClasspathResourceAsString(GROUP_EXPECTED)).stream()
                 .map(AnnotationSrcGroup::getReplacementCode)
                 .toList();
@@ -134,7 +134,9 @@ class SpoonAnnotationSorterTest {
         List<CtAnnotation<?>> originalAnnotations = List.copyOf(type.getAnnotations());
         List<SourcePosition> originalPositions =
                 originalAnnotations.stream().map(CtAnnotation::getPosition).toList();
-        List<AnnotationSrcGroup> originalGroups = model.getAnnotationSrcGroups();
+        List<AnnotationSrcGroup> originalGroups = model.getOriginalAnnotationSrcGroups();
+        int originalGroupStart = originalGroups.get(0).getStart();
+        int originalGroupEndExclusive = originalGroups.get(0).getEndExclusive();
         List<AnnotationSrcFragment> originalTypeAnnotations =
                 originalGroups.get(0).getAnnotationSrcFragmentsInSrcOrder();
         Sorter sorter = new Sorter(compiledConfig);
@@ -143,44 +145,40 @@ class SpoonAnnotationSorterTest {
         SortingResult result = sorter.sort(model);
 
         // Then
-        SpoonAstModel sortedModel = result.getSortedSpoonAstModel();
+        Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart =
+                result.getSortedAnnotationSrcFragmentsByGroupSrcStart();
         assertThat(result.isAnnotationsReordered()).isTrue();
-        assertThat(model.getAnnotationSrcGroups()).isSameAs(originalGroups);
-        assertThat(sortedModel.getCompilationUnit()).isSameAs(model.getCompilationUnit());
+        assertThat(model.getOriginalAnnotationSrcGroups()).isSameAs(originalGroups);
         assertThat(type.getAnnotations()).containsExactlyElementsOf(originalAnnotations);
         assertThat(type.getAnnotations())
                 .allSatisfy(annotation -> assertThat(annotation.getParent()).isSameAs(type));
         assertThat(originalAnnotations.stream().map(CtAnnotation::getPosition).toList())
                 .containsExactlyElementsOf(originalPositions);
-        assertThat(sortedModel.getAnnotationSrcGroups()).isSameAs(originalGroups);
-        assertThat(findAnnotationOrder(originalGroups.get(0), sortedModel.getAnnotationOrderByGroupSrcStart()))
+        assertThat(findAnnotationOrder(originalGroups.get(0), sortedAnnotationSrcFragmentsByGroupSrcStart))
                 .containsExactly(originalTypeAnnotations.get(1), originalTypeAnnotations.get(0));
-        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getStart())
-                .isEqualTo(originalGroups.get(0).getStart());
-        assertThat(sortedModel.getAnnotationSrcGroups().get(0).getEndExclusive())
-                .isEqualTo(originalGroups.get(0).getEndExclusive());
+        assertThat(model.getOriginalAnnotationSrcGroups().get(0).getStart()).isEqualTo(originalGroupStart);
+        assertThat(model.getOriginalAnnotationSrcGroups().get(0).getEndExclusive())
+                .isEqualTo(originalGroupEndExclusive);
         assertThat(originalTypeAnnotations)
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Zed", "Able");
         assertThat(originalGroups.stream()
                         .flatMap(group ->
-                                findAnnotationOrder(group, sortedModel.getAnnotationOrderByGroupSrcStart()).stream())
+                                findAnnotationOrder(group, sortedAnnotationSrcFragmentsByGroupSrcStart).stream())
                         .toList())
                 .containsExactlyInAnyOrderElementsOf(originalGroups.stream()
                         .flatMap(group -> group.getAnnotationSrcFragmentsInSrcOrder().stream())
                         .toList());
-        assertThatThrownBy(() -> sortedModel.getAnnotationSrcGroups().clear())
+        assertThatThrownBy(() -> model.getOriginalAnnotationSrcGroups().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
-        assertThatThrownBy(() -> sortedModel
-                        .getAnnotationSrcGroups()
+        assertThatThrownBy(() -> model.getOriginalAnnotationSrcGroups()
                         .get(0)
                         .getAnnotationSrcFragmentsInSrcOrder()
                         .clear())
                 .isInstanceOf(UnsupportedOperationException.class);
-        assertThatThrownBy(() -> sortedModel.getAnnotationOrderByGroupSrcStart().clear())
+        assertThatThrownBy(() -> sortedAnnotationSrcFragmentsByGroupSrcStart.clear())
                 .isInstanceOf(UnsupportedOperationException.class);
-        assertThatThrownBy(() -> sortedModel
-                        .getAnnotationOrderByGroupSrcStart()
+        assertThatThrownBy(() -> sortedAnnotationSrcFragmentsByGroupSrcStart
                         .get(originalGroups.get(0).getStart())
                         .clear())
                 .isInstanceOf(UnsupportedOperationException.class);
@@ -576,7 +574,7 @@ class SpoonAnnotationSorterTest {
                     "Expected one fixture field: " + fieldName + "; found " + matchingFields.size());
         }
         SourcePosition fieldPosition = matchingFields.getFirst().getPosition();
-        return model.getAnnotationSrcGroups().stream()
+        return model.getOriginalAnnotationSrcGroups().stream()
                 .filter(group -> group.getStart() >= fieldPosition.getSourceStart()
                         && group.getEndExclusive() <= fieldPosition.getSourceEnd() + 1)
                 .findFirst()

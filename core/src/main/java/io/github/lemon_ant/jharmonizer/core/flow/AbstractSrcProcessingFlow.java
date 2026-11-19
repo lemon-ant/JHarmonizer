@@ -23,6 +23,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedT
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonPrintingInput;
 import io.github.lemon_ant.jharmonizer.core.utilities.JvmShutdownSignal;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +109,6 @@ abstract class AbstractSrcProcessingFlow implements IFlow {
             boolean stopOnViolation) {
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, "sorting checks", true);
-        SpoonAstModel sortedSpoonAstModel = sortingAndSerializationResult.getSortedSpoonAstModel();
         SortingResult sortingResult = sortingAndSerializationResult.getSortingResult();
 
         List<MemberRelocation> memberRelocations = sortingResult.getMemberRelocations();
@@ -139,7 +139,7 @@ abstract class AbstractSrcProcessingFlow implements IFlow {
                         sortingAndSerializationResult.getSerializedSrcCode(),
                         srcFile.getPath(),
                         OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
-                                sortedSpoonAstModel.getOptOuts(),
+                                sortingResult.getSortedSpoonAstModel().getOptOuts(),
                                 sortingAndSerializationResult.getSerializedSrcWithSkippedTypeRanges()));
 
         if (!srcFile.getSrcCode().equals(formattingResult.getFormattedSrcCode())) {
@@ -274,12 +274,13 @@ abstract class AbstractSrcProcessingFlow implements IFlow {
                                             ? OptOutFormattingRangeResolver.resolveFullyOffTypeRanges(
                                                     parsedSpoonAstModel.getOptOuts(), originalSrcCode)
                                             : Map.of())),
-                    new SortingResult(false, List.of(), false, parsedSpoonAstModel, new SortingStatistic(0)));
+                    new SortingResult(List.of(), false, Map.of(), parsedSpoonAstModel, new SortingStatistic(0)));
         }
 
         SortingResult sortingResult = getSorter().sort(parsedSpoonAstModel, collectMemberRelocations);
-        SerializationResult serializationResult =
-                SrcAstTranslator.serialize(sortingResult.getSortedSpoonAstModel(), printerConfig);
+        SpoonPrintingInput printingInput = new SpoonPrintingInput(
+                sortingResult.getSortedSpoonAstModel(), sortingResult.getSortedAnnotationSrcFragmentsByGroupSrcStart());
+        SerializationResult serializationResult = SrcAstTranslator.serialize(printingInput, printerConfig);
         return new SortingAndSerializationResult(serializationResult, sortingResult);
     }
 
@@ -297,12 +298,13 @@ abstract class AbstractSrcProcessingFlow implements IFlow {
         // REORDER reports change flags; detailed relocation lists are only consumed by check flows.
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, sortingDescription, false);
+        SortingResult sortingResult = sortingAndSerializationResult.getSortingResult();
         FormattingResult formattingResult = getFormatter()
                 .formatSrc(
                         sortingAndSerializationResult.getSerializedSrcCode(),
                         srcFile.getPath(),
                         OptOutFormattingRangeResolver.resolveFormattingSkippedRanges(
-                                parsedSpoonAstModel.getOptOuts(),
+                                sortingResult.getSortedSpoonAstModel().getOptOuts(),
                                 sortingAndSerializationResult.getSerializedSrcWithSkippedTypeRanges()));
         return new SortingSerializationAndFormattingResult(formattingResult, sortingAndSerializationResult);
     }
@@ -374,11 +376,6 @@ abstract class AbstractSrcProcessingFlow implements IFlow {
         @NonNull
         SerializedSrcWithSkippedTypeRanges getSerializedSrcWithSkippedTypeRanges() {
             return serializationResult.getSerializedSrcWithSkippedTypeRanges();
-        }
-
-        @NonNull
-        SpoonAstModel getSortedSpoonAstModel() {
-            return sortingResult.getSortedSpoonAstModel();
         }
     }
 

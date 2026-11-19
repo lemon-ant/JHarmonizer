@@ -12,6 +12,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedT
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,10 +55,11 @@ class SpoonPrinterBoundaryIntegrationTest {
         String preservedFragment =
                 srcCode.substring(preservedPosition.getSourceStart(), preservedPosition.getSourceEnd() + 1)
                         + lineSeparator;
+        SpoonPrintingInput printingInput = new SpoonPrintingInput(model, Map.of());
 
         // When
         SerializedSrcWithSkippedTypeRanges result =
-                SrcAstTranslator.serialize(model, printerConfig).getSerializedSrcWithSkippedTypeRanges();
+                SrcAstTranslator.serialize(printingInput, printerConfig).getSerializedSrcWithSkippedTypeRanges();
 
         // Then
         assertThat(result.getSortingSkippedTypeRanges()).hasSize(1);

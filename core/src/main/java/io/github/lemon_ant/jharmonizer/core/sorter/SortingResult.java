@@ -2,22 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import lombok.NonNull;
 import lombok.Value;
 
 /**
  * Result of sorting all members in a single source file.
- * Bundles the reordered Spoon AST model, prepared relocation diagnostics, change flags, and timing statistics.
+ * Bundles the working model after sorting, selected annotation orders, relocation diagnostics, change flags, and timing.
+ * The model retains its shared mutable AST; selected annotation orders remain separate from its source groups.
  */
 @Value
 public class SortingResult {
-
-    /** Whether this sorting invocation changed annotation order. */
-    boolean annotationsReordered;
 
     @NonNull
     List<MemberRelocation> memberRelocations;
@@ -26,6 +27,10 @@ public class SortingResult {
     boolean membersReordered;
 
     @NonNull
+    Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart;
+
+    /** Same model supplied to the sorter, after its shared AST's declaration order has been sorted in place. */
+    @NonNull
     SpoonAstModel sortedSpoonAstModel;
 
     @NonNull
@@ -33,23 +38,35 @@ public class SortingResult {
 
     /**
      * Retains sorting output with an unmodifiable view of its member diagnostics.
-     * @param annotationsReordered whether this invocation changed annotation order
      * @param memberRelocations the requested diagnostics; callers must not modify this list after handoff
      * @param membersReordered whether this invocation changed Spoon declaration order, including top-level types
-     * @param sortedSpoonAstModel the working model after sorting
+     * @param sortedAnnotationSrcFragmentsByGroupSrcStart read-only changed annotation orders by original group start
+     * @param sortedSpoonAstModel the supplied working model after in-place declaration sorting
      * @param sortingStatistic the sorting and relocation-detection timing
      */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification =
+                    "The sorter hands off an unmodifiable map and unmodifiable fragment lists; retain that view.")
     public SortingResult(
-            boolean annotationsReordered,
             @NonNull List<MemberRelocation> memberRelocations,
             boolean membersReordered,
+            @NonNull Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart,
             @NonNull SpoonAstModel sortedSpoonAstModel,
             @NonNull SortingStatistic sortingStatistic) {
-        this.annotationsReordered = annotationsReordered;
         this.memberRelocations = Collections.unmodifiableList(memberRelocations);
         this.membersReordered = membersReordered;
+        this.sortedAnnotationSrcFragmentsByGroupSrcStart = sortedAnnotationSrcFragmentsByGroupSrcStart;
         this.sortedSpoonAstModel = sortedSpoonAstModel;
         this.sortingStatistic = sortingStatistic;
+    }
+
+    /**
+     * Reports whether this invocation selected a different annotation order for any source group.
+     * @return whether the changed-order map is non-empty
+     */
+    public boolean isAnnotationsReordered() {
+        return !sortedAnnotationSrcFragmentsByGroupSrcStart.isEmpty();
     }
 
     /**
@@ -57,6 +74,6 @@ public class SortingResult {
      * @return whether either independent sorting flag is set
      */
     public boolean isReordered() {
-        return annotationsReordered || membersReordered;
+        return isAnnotationsReordered() || membersReordered;
     }
 }

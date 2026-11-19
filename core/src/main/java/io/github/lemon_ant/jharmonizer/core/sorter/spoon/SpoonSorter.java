@@ -55,7 +55,7 @@ public class SpoonSorter {
     /**
      * Sorts declaration order in the AST and records changed annotation permutations.
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
-     * @return model with the updated AST, original annotation groups, changed annotation orders, and invocation flags
+     * @return the supplied model after in-place declaration sorting, selected annotation orders, and change flags
      * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
      */
     @NonNull
@@ -69,13 +69,10 @@ public class SpoonSorter {
         }
         Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart =
                 SpoonAnnotationSorter.sort(
-                        spoonAstModel.getAnnotationSrcGroups(),
+                        spoonAstModel.getOriginalAnnotationSrcGroups(),
                         sortingSkippedTypes,
                         compiledConfig.getAnnotationComparator());
-        return new SpoonSortingResult(
-                !sortedAnnotationSrcFragmentsByGroupSrcStart.isEmpty(),
-                membersReordered,
-                spoonAstModel.withAnnotationOrderByGroupSrcStart(sortedAnnotationSrcFragmentsByGroupSrcStart));
+        return new SpoonSortingResult(membersReordered, sortedAnnotationSrcFragmentsByGroupSrcStart, spoonAstModel);
     }
 
     @NonNull
@@ -225,24 +222,35 @@ public class SpoonSorter {
         return nestedMembersReordered || memberOrdering.isReordered();
     }
 
-    /** Final model and order changes produced by one sorting invocation. */
+    /** Working model, selected annotation orders, and declaration changes produced by one sorting invocation. */
     @Value
     @AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
     public static class SpoonSortingResult {
-        boolean annotationsReordered;
 
         /** Whether Spoon declaration order changed, including top-level types. */
         boolean membersReordered;
 
         @NonNull
+        Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart;
+
+        /** Supplied working model after sorting its shared AST in place. */
+        @NonNull
         SpoonAstModel sortedSpoonAstModel;
+
+        /**
+         * Reports whether this invocation selected a different annotation order for any source group.
+         * @return whether the changed-order map is non-empty
+         */
+        public boolean isAnnotationsReordered() {
+            return !sortedAnnotationSrcFragmentsByGroupSrcStart.isEmpty();
+        }
 
         /**
          * Reports whether declaration or annotation order changed.
          * @return whether any source elements were reordered
          */
         public boolean isReordered() {
-            return annotationsReordered || membersReordered;
+            return isAnnotationsReordered() || membersReordered;
         }
     }
 }

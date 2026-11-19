@@ -8,6 +8,7 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonPrintingInput;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonSrcPrinter;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch;
 import io.github.lemon_ant.jharmonizer.core.utilities.StopWatch.TimedResult;
@@ -50,20 +51,20 @@ public final class SrcAstTranslator {
     }
 
     /**
-     * Serializes the sorted AST model back to source code.
+     * Serializes the current AST and selected annotation orders back to source code.
      *
-     * @param sortedSpoonAstModel the sorted Spoon AST model to serialize
+     * @param printingInput shared AST and source context with the annotation orders to print
      * @param printerConfig the source printer settings for this invocation
      * @return the serialization result containing the source code and statistics
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     @NonNull
     public static SerializationResult serialize(
-            @NonNull SpoonAstModel sortedSpoonAstModel, @NonNull PrinterConfig printerConfig) {
-        log.trace("Serializing {}", sortedSpoonAstModel.getPath());
+            @NonNull SpoonPrintingInput printingInput, @NonNull PrinterConfig printerConfig) {
+        log.trace("Serializing {}", printingInput.getPath());
 
         TimedResult<SerializedSrcWithSkippedTypeRanges> serializationTimedResult =
-                StopWatch.measure(() -> SpoonSrcPrinter.serializeCompilationUnit(sortedSpoonAstModel, printerConfig));
+                StopWatch.measure(() -> SpoonSrcPrinter.serializeCompilationUnit(printingInput, printerConfig));
         SerializedSrcWithSkippedTypeRanges serializedSrcWithSkippedTypeRanges = serializationTimedResult.getResult();
 
         return new SerializationResult(

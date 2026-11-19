@@ -218,7 +218,7 @@ class AnnotationTypeNameResolverTest {
         int tagSrcOffset = parsedModel.getSrcCode().indexOf("@Tag(\"a\")");
         AnnotationDependencyKeyResolver dependencyResolver =
                 new AnnotationDependencyKeyResolver(parsedModel.getCompilationUnit());
-        AnnotationSrcGroup originalGroup = parsedModel.getAnnotationSrcGroups().stream()
+        AnnotationSrcGroup originalGroup = parsedModel.getOriginalAnnotationSrcGroups().stream()
                 .filter(annotationGroup -> annotationGroup.getStart() == containerSrcOffset)
                 .findFirst()
                 .orElseThrow(
@@ -451,7 +451,7 @@ class AnnotationTypeNameResolverTest {
         assertThat(containerDependencyKey).isEqualTo("?." + containerTypeName);
         assertThat(stampDependencyKey).isEqualTo(containerDependencyKey);
         assertThat(dependencyKeys).containsExactly(Set.of(containerDependencyKey), Set.of(containerDependencyKey));
-        assertThat(parsedModel.getAnnotationSrcGroups())
+        assertThat(parsedModel.getOriginalAnnotationSrcGroups())
                 .filteredOn(group -> group.getStart() == containerSrcOffset)
                 .singleElement()
                 .satisfies(group -> {
@@ -667,7 +667,7 @@ class AnnotationTypeNameResolverTest {
         });
         // Matching a known canonical spelling must not turn an unbound use into confirmed container metadata.
         assertThat(dependencyKey).isEqualTo("?." + writtenTypeName);
-        assertThat(srcQualifiedArrayModel.getAnnotationSrcGroups())
+        assertThat(srcQualifiedArrayModel.getOriginalAnnotationSrcGroups())
                 .filteredOn(group -> group.getStart() == srcOffset)
                 .singleElement()
                 .satisfies(group -> {
@@ -769,7 +769,7 @@ class AnnotationTypeNameResolverTest {
     }
 
     private static void assertScannedUse(SpoonAstModel parsedModel, int srcOffset) {
-        assertThat(parsedModel.getAnnotationSrcGroups().stream()
+        assertThat(parsedModel.getOriginalAnnotationSrcGroups().stream()
                         .flatMap(annotationGroup -> annotationGroup.getAnnotationSrcFragmentsInSrcOrder().stream()))
                 .anyMatch(annotationFragment -> annotationFragment.getAnnotationStart() == srcOffset);
     }

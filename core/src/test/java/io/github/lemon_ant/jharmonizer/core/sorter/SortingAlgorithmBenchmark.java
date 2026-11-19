@@ -38,11 +38,11 @@ public class SortingAlgorithmBenchmark {
         int benchmarkChecksum = 0;
         for (SpoonAstModel fixtureModel : state.iterationModels) {
             SpoonAstModel workingModel = copyWithClonedCompilationUnit(fixtureModel);
-            SpoonAstModel sortedModel = state.spoonSorter
+            SpoonAstModel sortedSpoonAstModel = state.spoonSorter
                     .sortCompilationUnitRecursively(workingModel)
                     .getSortedSpoonAstModel();
             benchmarkChecksum +=
-                    sortedModel.getCompilationUnit().getDeclaredTypes().size();
+                    sortedSpoonAstModel.getCompilationUnit().getDeclaredTypes().size();
         }
         return benchmarkChecksum;
     }

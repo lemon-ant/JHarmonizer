@@ -42,15 +42,18 @@ class SpoonSrcPrinterTest {
         String srcCode = readClasspathResourceAsString(
                 "/test-cases/core/e2e/printer/scenarios/05-combined-boundaries/input/BoundarySample.java");
         SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("BoundarySample.java")));
+        SpoonPrintingInput printingInput = new SpoonPrintingInput(model, Map.of());
         String otherSrcCode = "class Other {\r\n    int value;\r\n}\r\n";
         PrinterConfig otherPrinterConfig = new PrinterConfig(false, false, false);
         SpoonAstModel otherModel = SpoonParser.parseJavaSrcFile(createSrcFile(otherSrcCode, Path.of("Other.java")));
-        SerializedSrcWithSkippedTypeRanges firstResult = serializeCompilationUnit(model, printerConfig);
+        SpoonPrintingInput otherPrintingInput = new SpoonPrintingInput(otherModel, Map.of());
+        SerializedSrcWithSkippedTypeRanges firstResult = serializeCompilationUnit(printingInput, printerConfig);
         Map<CtType<?>, SrcCharacterRange> originalRanges = Map.copyOf(firstResult.getSortingSkippedTypeRanges());
-        SerializedSrcWithSkippedTypeRanges otherResult = serializeCompilationUnit(otherModel, otherPrinterConfig);
+        SerializedSrcWithSkippedTypeRanges otherResult =
+                serializeCompilationUnit(otherPrintingInput, otherPrinterConfig);
 
         // When
-        SerializedSrcWithSkippedTypeRanges repeatedResult = serializeCompilationUnit(model, printerConfig);
+        SerializedSrcWithSkippedTypeRanges repeatedResult = serializeCompilationUnit(printingInput, printerConfig);
 
         // Then
         assertThat(firstResult.getSortingSkippedTypeRanges())
@@ -68,13 +71,17 @@ class SpoonSrcPrinterTest {
     void serializeCompilationUnit_sameModelWithDifferentConfigurations_usesCurrentSettings() {
         // Given
         SpoonAstModel model = parseAstModelFromJavaFixtureResource(HEADER_SPACING_FIXTURE);
+        SpoonPrintingInput printingInput = new SpoonPrintingInput(model, Map.of());
         PrinterConfig compactConfig = new PrinterConfig(false, false, false);
         PrinterConfig spacedConfig = new PrinterConfig(true, false, false);
-        String compactSrcCode = serializeCompilationUnit(model, compactConfig).getSerializedSrcCode();
-        String spacedSrcCode = serializeCompilationUnit(model, spacedConfig).getSerializedSrcCode();
+        String compactSrcCode =
+                serializeCompilationUnit(printingInput, compactConfig).getSerializedSrcCode();
+        String spacedSrcCode =
+                serializeCompilationUnit(printingInput, spacedConfig).getSerializedSrcCode();
 
         // When
-        String repeatedSrcCode = serializeCompilationUnit(model, compactConfig).getSerializedSrcCode();
+        String repeatedSrcCode =
+                serializeCompilationUnit(printingInput, compactConfig).getSerializedSrcCode();
 
         // Then
         assertThat(spacedSrcCode).isNotEqualTo(compactSrcCode);
@@ -95,12 +102,15 @@ class SpoonSrcPrinterTest {
                 + "\n".repeat(trailingTerminators);
         Path srcPath = temporaryDirectory.resolve(fileName);
         SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(inputSrcCode, srcPath));
-        String printedSrcCode = serializeCompilationUnit(model, printerConfig).getSerializedSrcCode();
+        SpoonPrintingInput printingInput = new SpoonPrintingInput(model, Map.of());
+        String printedSrcCode =
+                serializeCompilationUnit(printingInput, printerConfig).getSerializedSrcCode();
         SpoonAstModel repeatedModel = SpoonParser.parseJavaSrcFile(createSrcFile(printedSrcCode, srcPath));
+        SpoonPrintingInput repeatedPrintingInput = new SpoonPrintingInput(repeatedModel, Map.of());
 
         // When
         String repeatedSrcCode =
-                serializeCompilationUnit(repeatedModel, printerConfig).getSerializedSrcCode();
+                serializeCompilationUnit(repeatedPrintingInput, printerConfig).getSerializedSrcCode();
 
         // Then
         assertThat(printedSrcCode).isEqualTo(expectedSrcCode);

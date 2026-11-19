@@ -48,7 +48,7 @@ For each source file, the flow runs the following stages in order:
    └────────┬─────────┘
             ▼
    ┌──────────────────┐
-   │   SpoonParser    │  parse to a Spoon CtCompilationUnit + SpoonAstModel snapshot
+   │   SpoonParser    │  parse to SpoonAstModel with source context and a working AST
    └────────┬─────────┘
             ▼
    ┌──────────────────┐
@@ -60,7 +60,11 @@ For each source file, the flow runs the following stages in order:
    └────────┬─────────┘
             ▼
    ┌──────────────────┐
-   │   Spoon printer  │  serialize the reordered AST to text (PrinterConfig)
+   │  Flow assembly   │  SortingResult model + sorted annotation orders → SpoonPrintingInput
+   └────────┬─────────┘
+            ▼
+   ┌──────────────────┐
+   │   Spoon printer  │  serialize SpoonPrintingInput to text (PrinterConfig)
    └────────┬─────────┘
             ▼
    ┌──────────────────┐
