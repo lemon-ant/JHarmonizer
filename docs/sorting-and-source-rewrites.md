@@ -16,7 +16,7 @@ defensive copies and retains independent annotation and member flags with a comp
 mutate handed-off lists. The full ordered-content hierarchy and independence from mutable Spoon nodes remain deferred.
 
 The direction is to return one explicit ordering model instead of combining a mutated Spoon AST with
-separately returned annotation groups. Extend this direction to support code transformations before sorting.
+separately returned annotation orders. Extend this direction to support code transformations before sorting.
 The first migration should preserve current output and sorting algorithms. Semantic rewrites are a separate step.
 
 For the first rewrite features, prefer AST-guided text edits followed by reparsing before sorting. This gives sorting
@@ -30,8 +30,8 @@ and attached annotation fragments that the custom printer can consume directly. 
 
 | Current component | Observable behavior |
 | --- | --- |
-| `SpoonSorter.sortCompilationUnitRecursively` | Mutates declaration lists once and returns the model with sorted annotation groups and final-order change flags. |
-| `SpoonAnnotationSorter` | Orders lexical annotations and resolves gap text; each group lazily assembles its replacement code. AST annotation lists remain unchanged. |
+| `SpoonSorter.sortCompilationUnitRecursively` | Mutates declaration lists once and returns the model with a sparse annotation-order map and final-order change flags. |
+| `SpoonAnnotationSorter` | Returns changed orders of existing lexical fragments by original group start. Source groups, gaps, and AST annotation lists remain unchanged. |
 | `GroupBoundaryMarker` | Stores separator instructions in metadata on the first member of each group. |
 | `Sorter.sort` | Returns the sorted model, unmodifiable member-relocation lists, independent annotation and member flags with a computed aggregate, and timing; the input and result wrappers share the mutable Spoon AST. |
 | `SpoonSrcPrinter` | Reads current Spoon members, positions, annotation presence, and separator metadata while copying source. |
@@ -44,8 +44,9 @@ through
 applies the comparator and prepared constraints during sorting. The shared
 [`AnnotationSrcGroup`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java)
 stays beside the scanner to restrict initial group and fragment construction to that package, despite consumers in
-sorting and printing. The sorter selects annotation order and gap whitespace; `copyWithFragments` and
-`copyWithLeadingWhitespace` only copy prepared state while retaining original ranges and source values.
+sorting and printing. The scanner creates immutable source groups and prepares gap layouts for separator requirements
+zero, one, and two. The sorter stores only changed fragment orders in `annotationOrderByGroupSrcStart`.
+`AnnotationSrcGroupRenderer` joins existing fragments with these layouts; source models are never reconstructed.
 Parser-wide type-tree traversal uses
 [`SpoonTypeTreeUtils`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeTreeUtils.java).
 Annotation-only type-name, import, and inheritance helpers stay with their consumers in `translator.spoon.annotation`.
@@ -57,14 +58,15 @@ the model is consumed across stages. Other helpers owned by one stage stay besid
 of Spoon. Generic names and possible reuse do not justify a neutral package; check actual production consumers of each
 class and method before moving shared operations there.
 
-Consequently, sorting the same input model with configuration A and then B can leave result A holding annotation
-order A alongside the member order and metadata produced by B. Immutable outer lists do not isolate this shared state.
-This is an architectural consequence of the inspected references, not a new runtime reproducer executed for this note.
+Original annotation groups remain immutable; the selected output order is separate state. The underlying Spoon AST
+still belongs to a shared working model. Its single-sort claim prevents sorting the same parsed model again with
+another configuration. The deferred design addresses that shared AST boundary rather than mutable annotation inputs.
 
 Spoon does retain annotation lists. The extra source representation exists to retain exact spelling, comments,
 parentheses, and constructs absent from the model. It is inaccurate to say that the Spoon AST cannot contain
 annotations at all. Conversely, its annotation lists cannot replace all existing lexical fragments.
-Only lexical groups carry the output annotation order; sorting AST annotation lists would duplicate unused work.
+Only lexical fragments and their separate order map define annotation output order; sorting AST annotation lists
+would duplicate unused work.
 
 `MemberGroupBlock` is a useful starting point: the sorter already computes ordered groups, then marks boundaries and
 flattens the groups back into Spoon lists. Preserve that useful result instead of reconstructing it during printing.

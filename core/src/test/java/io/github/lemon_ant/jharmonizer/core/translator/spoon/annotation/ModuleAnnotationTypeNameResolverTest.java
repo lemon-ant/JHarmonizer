@@ -77,7 +77,7 @@ class ModuleAnnotationTypeNameResolverTest {
                 .as("Spoon 11.5.0 omits the original module annotation use")
                 .isEmpty();
         assertThat(moduleModel.getAnnotationSrcGroups().stream()
-                        .flatMap(annotationGroup -> annotationGroup.getAnnotationSrcFragments().stream()))
+                        .flatMap(annotationGroup -> annotationGroup.getAnnotationSrcFragmentsInSrcOrder().stream()))
                 .anyMatch(annotationFragment -> annotationFragment.getAnnotationStart() == srcOffset);
         assertThat(resolution.getAnnotationTypeName()).isEqualTo(writtenAnnotationTypeName);
         assertThat(resolution.isCanonicalTypeNameConfirmed()).isFalse();

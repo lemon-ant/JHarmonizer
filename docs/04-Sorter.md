@@ -30,22 +30,20 @@ Global `annotations-ordering` also reorders source annotation groups on packages
 The configuration compiler builds the comparator once. During parsing, `AnnotationSourceScanner` captures source
 fragments and computes their keys, storing the immutable groups in `SpoonAstModel`. `SpoonAnnotationSorter` sorts each
 eligible source group once with that comparator, including annotations missing from Spoon's model.
-AST annotation lists retain their parsed order: printing consumes the sorted source groups directly, so a second AST
+AST annotation lists retain their parsed order: printing consumes the selected lexical order, so a second AST
 scan and annotation sort would not affect output. Singleton groups and groups in excluded types retain their original
 order.
-The sorter passes sorted annotations and resolved gap slots as two required lists to the group constructor.
-Resolving a gap only selects a scanner-prepared whitespace prefix, comparing source boundaries and separator counts.
-It does not read source text, inspect characters, or parse comments. Each gap combines that prefix with its fixed
-content; its retained original values support subsequent sorts without storing complete previous code versions. The
-constructor retains unmodifiable views and requires one gap per annotation. Producers must not modify the supplied
-lists after handoff. The private mixed sequence is lazily built and cached by a static helper that alternates the lists;
-sorting reads only the typed lists. Clients cannot access or independently replace the derived sequence. The group lazily
-concatenates it into `replacementCode` on first access; every newly constructed group has its own caches.
-The printer only replaces the original group range with that complete block. Group boundaries and
-gap positions remain fixed when the sorter replaces the immutable annotation order. Blank lines determine whether
+The sorter returns `annotationOrderByGroupSrcStart`, an immutable map containing only changed orders of existing
+annotation fragments, keyed by original group start. It does not prepare gap text or construct new source groups.
+The scanner prepares immutable gap layouts for separator requirements zero, one, and two. Rendering selects those
+ready layouts, joins their whitespace and fixed content, and retains an original annotation/gap pair verbatim.
+Source groups retain their original typed lists and lazily cache only original `replacementCode`. Callers must not
+modify handed-off lists. The renderer receives a selected order without changing those source models; the printer
+replaces the original group range with its joined output.
+Group boundaries and gap positions remain fixed when annotation order changes. Blank lines determine whether
 a standalone block belongs to the preceding or following annotation. Separate blocks and their surrounding gaps stay in
-place; declaration JavaDoc and file preambles retain their positions. The sorter preserves line-comment terminators and
-moves blank lines with the blocks they attach to an annotation, removing redundant blank lines from the original
+place; declaration JavaDoc and file preambles retain their positions. Scanner-prepared layouts preserve line-comment
+terminators and move blank lines with attached comment blocks while removing redundant blank lines from the original
 position. Complete ties retain source order. See
 [`annotations-ordering`](config-dsl.md#annotations-ordering) for criteria, defaults, and comment attachment rules.
 
@@ -59,13 +57,14 @@ diagnostics, independent `annotationsReordered` and `membersReordered` flags, an
 covers Spoon declaration order, including top-level types; the annotation flag covers source annotation fragments.
 `isReordered()` derives their OR without storing another flag. The underlying Spoon AST is shared with the input
 wrapper; declaration lists are reordered in place, while AST annotation lists remain unchanged.
-Serialization consumes the returned model to print declaration order from the AST and annotation order from the groups.
+Serialization consumes the returned model to print declaration order from the AST and annotation order from the map;
+groups missing from that map retain their original order and code.
 
 Each freshly parsed shared AST is sorted once per flow. `SpoonSorter` returns its model and change flags in the nested
 `SpoonSortingResult`. Final declaration and annotation order is collected together with identity-based change flags,
 after grouping and dependency repair. Annotation source groups retain their source-range order; only annotation order
-inside a group can change. Group preparation collects the aggregate annotation-change flag without comparing group
-permutations and returns the prepared groups and flag in the shared `ElementOrdering<AnnotationSrcGroup>` carrier.
+inside a group can change. The sparse order map contains only changed groups, so its non-emptiness supplies the
+aggregate annotation-change flag without comparing group permutations or preparing replacement groups.
 No separate AST traversal is needed to decide whether sorting changed order.
 
 `SpoonSorter` atomically claims the shared `CtCompilationUnit` model through metadata before any sorting mutation.

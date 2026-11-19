@@ -23,8 +23,8 @@ package while exposing its read-only diagnostic data to those consumers.
 `SpoonSorter` emits declaration and annotation change flags while collecting final output. Element identities are
 compared against input order during the same traversal; checks stop after the first mismatch in each scope. Grouping
 and dependency repair complete before the flag is decided, so temporary moves that cancel out do not report a change.
-Annotation groups remain in source-range order. Preparing them collects whether any group's annotation order changed;
-it does not compare group permutations.
+Annotation groups remain unchanged in source-range order. The separate map stores only changed annotation orders;
+its non-emptiness supplies the annotation-change flag without comparing group permutations.
 `SortingResult.annotationsReordered` controls annotation diffs. The independent `membersReordered` flag reports Spoon
 declaration changes, including top-level types. `isReordered()` derives their OR for flow status and sorting checks.
 

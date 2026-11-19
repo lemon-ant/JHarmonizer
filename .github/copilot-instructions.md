@@ -235,15 +235,16 @@ SPDX-License-Identifier: Apache-2.0
   the completed AST again. Compute detailed member diagnostics only when declarations changed and the caller needs the
   report.
 - Preserve annotation source-group order during sorting; only annotation order inside each group may change.
-  Collect the aggregate annotation-change flag while preparing groups instead of checking for group permutations.
-  Reuse `ElementOrdering` for the prepared groups and their change flag without rerunning change detection.
+  Keep parsed groups and gaps unchanged. Store only changed orders in `annotationOrderByGroupSrcStart`, mapping each
+  original group start to existing annotation fragments in sorted order. Missing entries retain source order;
+  derive the annotation-change flag from map non-emptiness instead of comparing groups again.
 - When one timing statistic covers consecutive operations, measure them in a single `StopWatch.measure` call instead of
   summing separate measurements.
 - Keep annotation source models in the standalone `AnnotationSrcGroup` class beside the scanner in
   `translator.spoon.annotation`, with nested annotation, gap, and private base-fragment types.
-  Keep the initial group constructor and fragment/gap builders package-private; keep fragment/gap constructors private.
-  Sorting selects annotation order and whitespace; public `copyWithFragments` and `copyWithLeadingWhitespace` methods
-  only copy the supplied prepared state while retaining original ranges and immutable source values.
+  Keep group/gap/layout constructors and the annotation-fragment builder package-private; keep the fragment's full
+  constructor private. Keep gap types and their list getter package-private; sorting consumes only annotation fragments.
+  Construct source models once in the scanner; do not expose gap/group copying APIs.
 - Keep annotation ordering keys and semantic constraint metadata in `AnnotationDescriptor`. Annotation fragments retain
   the descriptor plus source ranges and text; gap fragments retain prepared content and whitespace values.
   Ordering algorithms remain in the sorter.
@@ -251,15 +252,18 @@ SPDX-License-Identifier: Apache-2.0
   Sum measured token and internal-comment lengths; exclude inter-token whitespace and outside comments, retain
   text-block indentation normalization, and use translated names for identities.
 - Capture annotation and gap fragments with their source ranges and comment/separator ownership during scanning.
-  Prepare gap content, whitespace-prefix choices, and separator counts in the scanner. Sorters select from this
-  prepared state; they must not read or analyze original source text. Gap fragments retain one ready-to-emit code
-  string, with immutable content and whitespace values shared between gap versions instead of complete original and
-  relocated code copies. Keep original whitespace separate from the selected prefix so later ordering can restore it.
-  Sorting determines annotation order and gap text. Group construction retains unmodifiable views of both typed lists
-  and requires one gap per annotation. Producers must not modify handed-off lists; the scanner starts fresh lists for
-  each group. Each group lazily interleaves and caches its mixed sequence, then lazily concatenates its replacement
-  code. Printers only replace the group range with that code; they must not interpret fragment
-  internals. `SrcPrinterOutput` owns source-range copying and group replacement for all source files.
+  Prepare fixed gap content and moved-gap layouts for separator requirements zero, one, and two in the scanner.
+  Each layout records whether to prepend the selected annotation's prepared separators and which leading whitespace
+  to use. Preserve exact separator strings, including mixed line endings. Gaps retain their original code and ranges.
+  Select the prepared layout for the final annotation/destination-gap pair during rendering; separator emission is
+  not a per-annotation constant. Keep preparation linear instead of materializing all possible pairings.
+  Sorting determines only annotation order; it must not prepare gap text, reconstruct source models, or analyze source.
+  Group construction retains unmodifiable views of both source-order lists and requires one gap per annotation.
+  Producers must not modify handed-off lists; the scanner starts fresh lists for each group. Each group lazily
+  interleaves and caches its original mixed sequence and original replacement code.
+  `AnnotationSrcGroupRenderer` joins the selected order with prepared gap layouts, using the original gap verbatim
+  for its original annotation. It must not read source text or decide comment ownership. `SrcPrinterOutput` delegates
+  this joining and owns source-range copying and group replacement for all source files.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private
   method parameters may stay implicit when the intent is already obvious.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
@@ -396,8 +400,8 @@ SPDX-License-Identifier: Apache-2.0
 - Prefer `Set` over `List` for collections of unique values whose iteration order is irrelevant to their consumers.
 - When an index must cover every requested key, reject missing entries with a diagnostic exception instead of
   substituting empty/default values. Validate this invariant once before dependent lookups where practical.
-- Use current-order terminology for group views shared by scanning and sorting. Reserve sorted-order names for
-  sequences already sorted by the comparator; printers consume prepared groups.
+- Distinguish immutable source-order group views from separately stored annotation orders selected by sorting.
+  Reserve sorted-order names for sequences already sorted by the comparator; rendering joins these views explicitly.
 - Name helper and data-carrier types after the entities they represent, for example `AnnotationSrcFragment`, so their
   purpose remains clear at import and usage sites outside the enclosing class.
 - Build and validate with JDK 21.

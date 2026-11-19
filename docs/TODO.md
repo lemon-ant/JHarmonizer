@@ -1653,10 +1653,9 @@ The stage result carries known flags after successful sorting; `SpoonAstModel` k
 This preserves the result contract without partial flag states or converting an unknown result to false.
 The shared AST claim continues to enforce the sorting lifecycle independently of result flags.
 
-Items 17 and 18 are resolved at the annotation sorting boundary: source groups are the first parameter, opt-outs the
-second, and the shared `ElementOrdering<AnnotationSrcGroup>` retains groups in source-range order. A group is replaced
-only when its internal annotation order changes; preparation collects that flag without a second iterator comparing
-groups or another change-detection call.
+Items 17 and 18 are resolved at the annotation sorting boundary: source groups are the first parameter and opt-outs the
+second. Original groups retain source-range order; a sparse map records only changed orders of existing fragments by
+group start. Its non-emptiness supplies the annotation-change flag without comparing or replacing source groups.
 
 Item 19 already has a direct early return after nested types are processed and before the current scope builds a
 dependency graph or result wrapper. A no-op wrapper factory would add an allocation to that path. Extending the guard

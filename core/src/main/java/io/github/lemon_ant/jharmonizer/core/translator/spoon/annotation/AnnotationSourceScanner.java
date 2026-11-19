@@ -10,6 +10,7 @@ import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findPr
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findTrailingLineSeparatorsStart;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationGapLayout;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcGap;
 import io.github.lemon_ant.jharmonizer.core.utilities.JavaTokenSourceUtils;
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,6 +43,9 @@ import spoon.reflect.declaration.CtCompilationUnit;
  * and comment ownership. Reconsider AST-based discovery only after the source-range and E2E contracts are preserved.
  */
 @UtilityClass
+// Lexer APIs and prepared fragment types belong to this parser, which shares one token cursor.
+// TODO Remove this suppression
+@SuppressWarnings("PMD.ExcessiveImports")
 public class AnnotationSourceScanner {
 
     /** Two line separators leave the blank line that separates comment blocks. */
@@ -91,21 +96,24 @@ public class AnnotationSourceScanner {
         boolean movesBlankLinesWithComment = precedingAnnotationSrcFragment.requiresBlankLineAfterTrailingComments()
                 && contentStart == gapEndExclusive;
         // In @A\n// A details\n\n@B, the lower comment and blank line move with A; its old gap keeps one line break.
-        // Independent comments retain the gap's whitespace; sorting only selects the prepared whitespace prefix.
-        return AnnotationSrcGap.builder()
-                .content(srcCode.substring(contentStart, gapEndExclusive))
-                .indentation(indentation)
-                .originalLeadingWhitespace(leadingWhitespace)
-                .relocatedLeadingWhitespace(
-                        movesBlankLinesWithComment
-                                ? srcCode.substring(findPrecedingLineSeparatorStart(lineStart, srcCode), lineStart)
-                                        + indentation
-                                : leadingWhitespace)
-                .retainedLineSeparatorCount(
-                        movesBlankLinesWithComment ? 0 : countLineSeparators(start, contentStart, srcCode))
-                .start(start)
-                .endExclusive(gapEndExclusive)
-                .build();
+        // Independent comments retain the gap's whitespace. Prepare every supported separator requirement now.
+        String relocatedLeadingWhitespace = movesBlankLinesWithComment
+                ? srcCode.substring(findPrecedingLineSeparatorStart(lineStart, srcCode), lineStart) + indentation
+                : leadingWhitespace;
+        AnnotationGapLayout requiredSeparatorsLayout = new AnnotationGapLayout(true, indentation);
+        int retainedLineSeparatorCount =
+                movesBlankLinesWithComment ? 0 : countLineSeparators(start, contentStart, srcCode);
+        AnnotationGapLayout retainedLayout = new AnnotationGapLayout(false, relocatedLeadingWhitespace);
+        // The scanner records requirements 0, 1, or 2. Exact CR/LF text stays on the annotation fragment;
+        // layouts share prefix/content strings instead of allocating one full gap for every annotation/slot pair.
+        List<AnnotationGapLayout> movedLayoutsByRequiredSeparatorCount = IntStream.rangeClosed(
+                        0, BLANK_LINE_SEPARATOR_COUNT)
+                .mapToObj(requiredSeparatorCount ->
+                        requiredSeparatorCount > retainedLineSeparatorCount ? requiredSeparatorsLayout : retainedLayout)
+                .toList();
+        String content = srcCode.substring(contentStart, gapEndExclusive);
+        return new AnnotationSrcGap(
+                content, gapEndExclusive, movedLayoutsByRequiredSeparatorCount, leadingWhitespace + content, start);
     }
 
     /** Argument tokens and dependencies captured before reading the token after the closing parenthesis. */

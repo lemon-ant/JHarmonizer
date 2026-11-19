@@ -48,8 +48,11 @@ flowchart TD
 Общая модель
 [`AnnotationSrcGroup`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java)
 находится рядом со сканером: исходные группы и фрагменты создаются только внутри этого пакета, хотя модель используют
-также сортировка и печать. Сортировщик выбирает порядок и пробельные префиксы, а методы модели `copyWithFragments` и
-`copyWithLeadingWhitespace` копируют подготовленное состояние с сохранением исходных диапазонов.
+также сортировка и печать. Сканер заранее готовит варианты пробельных префиксов для требований в ноль, один и два
+перевода строки. Сортировщик сохраняет только изменённые порядки существующих фрагментов в
+`annotationOrderByGroupSrcStart`; исходные группы и gaps не заменяются.
+`AnnotationSrcGroupRenderer` соединяет выбранный порядок с готовыми вариантами, сохраняя исходный gap без изменений,
+если его аннотация остаётся на месте. При отсутствии записи порядка используется кэшированный исходный код группы.
 Обход деревьев типов и выбор окружающих типов
 относятся к этапу разбора и находятся в `translator.spoon.SpoonTypeTreeUtils`. Форматирование имён, подготовка импортов
 и поиск наследуемых типов-членов нужны только процессорам аннотаций и находятся в `translator.spoon.annotation`.
@@ -2330,7 +2333,8 @@ import java.lang.annotation.Repeatable;
 | Часть алгоритма | Код или существующие проверки |
 |---|---|
 | Лексические границы, точное написание, вложенные аннотации и комментарии | [`AnnotationSourceScannerTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSourceScannerTest.java). |
-| Исходные группы, закрытое первичное создание и копирование подготовленных фрагментов | [`AnnotationSrcGroup.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java), [`AnnotationSrcGroupTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroupTest.java). |
+| Неизменяемые исходные группы, готовые варианты gaps и закрытое создание моделей | [`AnnotationSrcGroup.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java). |
+| Соединение выбранного порядка с готовыми пробельными префиксами без изменения исходных моделей | [`AnnotationSrcGroupRenderer.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroupRenderer.java), [`AnnotationSrcGroupTest.java`](../core/src/test/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroupTest.java). |
 | Полный алгоритм определения имени: приоритет этапов, одиночные импорты, квалифицированное написание, контекст пакета и индекс AST-ссылок | [`AnnotationTypeNameResolver.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameResolver.java). |
 | Определение и подтверждение имени обходом объявлений вложенных и наследуемых типов: этапы 1, 2 и 4 | [`AnnotationTypeNameFromDeclarationsResolver.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationTypeNameFromDeclarationsResolver.java). |
 | Три исхода поиска и проверка вида при создании успешного результата | [`CanonicalAnnotationTypeNameLookupResult.java`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/CanonicalAnnotationTypeNameLookupResult.java). |

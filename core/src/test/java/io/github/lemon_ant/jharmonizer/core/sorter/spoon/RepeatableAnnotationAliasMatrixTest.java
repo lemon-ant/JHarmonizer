@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.findAnnotationOrder;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.sortAnnotationGroups;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
@@ -14,6 +15,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.Annotati
 import java.net.URL;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -53,9 +55,10 @@ class RepeatableAnnotationAliasMatrixTest {
                 parseAstModelFromJavaFixtureResource(FIXTURE).getAnnotationSrcGroups();
         aliasPairGroups = annotationGroups.stream()
                 .filter(annotationGroup ->
-                        annotationGroup.getAnnotationSrcFragments().size() == 2)
+                        annotationGroup.getAnnotationSrcFragmentsInSrcOrder().size() == 2)
                 .filter(annotationGroup -> {
-                    List<AnnotationSrcFragment> annotationFragments = annotationGroup.getAnnotationSrcFragments();
+                    List<AnnotationSrcFragment> annotationFragments =
+                            annotationGroup.getAnnotationSrcFragmentsInSrcOrder();
                     return annotationFragments
                             .getFirst()
                             .getDescriptor()
@@ -72,7 +75,7 @@ class RepeatableAnnotationAliasMatrixTest {
                 .toList();
         containerAndLeafGroups = annotationGroups.stream()
                 .filter(annotationGroup -> {
-                    Set<String> annotationNames = annotationGroup.getAnnotationSrcFragments().stream()
+                    Set<String> annotationNames = annotationGroup.getAnnotationSrcFragmentsInSrcOrder().stream()
                             .map(annotationFragment ->
                                     annotationFragment.getDescriptor().getName())
                             .collect(toSet());
@@ -100,7 +103,7 @@ class RepeatableAnnotationAliasMatrixTest {
                 .hasSize(8 * 8 * 3);
         assertThat(aliasPairGroups)
                 .filteredOn(annotationGroup -> annotationGroup
-                        .getAnnotationSrcFragments()
+                        .getAnnotationSrcFragmentsInSrcOrder()
                         .getFirst()
                         .getDescriptor()
                         .getName()
@@ -114,7 +117,7 @@ class RepeatableAnnotationAliasMatrixTest {
     @MethodSource("aliasSpellingPairs")
     void orderPreservationGroupKeys_aliasSpellingPair_sharesDependency(
             @NonNull String description, @NonNull AnnotationSrcGroup annotationGroup) {
-        List<AnnotationSrcFragment> repeatedAnnotations = annotationGroup.getAnnotationSrcFragments();
+        List<AnnotationSrcFragment> repeatedAnnotations = annotationGroup.getAnnotationSrcFragmentsInSrcOrder();
         assertThat(repeatedAnnotations).as(description).hasSize(2);
         // Candidate key sets may differ between uses; a shared key is the actual dependency contract.
         assertThat(repeatedAnnotations.getFirst().getDescriptor().getOrderPreservationGroupKeys())
@@ -127,7 +130,7 @@ class RepeatableAnnotationAliasMatrixTest {
     @MethodSource("allSpellingGroups")
     void orderPreservationGroupKeys_allSpellingsTogether_sharesEveryRepeatedPairDependency(
             @NonNull String description, @NonNull AnnotationSrcGroup annotationGroup) {
-        List<AnnotationSrcFragment> repeatedAnnotations = annotationGroup.getAnnotationSrcFragments().stream()
+        List<AnnotationSrcFragment> repeatedAnnotations = annotationGroup.getAnnotationSrcFragmentsInSrcOrder().stream()
                 .filter(annotationFragment ->
                         annotationFragment.getDescriptor().getName().equals("Tag"))
                 .toList();
@@ -147,7 +150,7 @@ class RepeatableAnnotationAliasMatrixTest {
     @MethodSource("containerAndLeafGroups")
     void orderPreservationGroupKeys_containerAndLeafAliases_sharesDependency(
             @NonNull String description, @NonNull AnnotationSrcGroup annotationGroup) {
-        List<AnnotationSrcFragment> annotationFragments = annotationGroup.getAnnotationSrcFragments();
+        List<AnnotationSrcFragment> annotationFragments = annotationGroup.getAnnotationSrcFragmentsInSrcOrder();
         assertThat(annotationFragments).as(description).hasSize(2);
         assertThat(annotationFragments.getFirst().getDescriptor().getOrderPreservationGroupKeys())
                 .as(description)
@@ -160,36 +163,40 @@ class RepeatableAnnotationAliasMatrixTest {
     void sort_aliasSpellingPair_preservesRepeatedSourceOrder(
             @NonNull String description, @NonNull AnnotationSrcGroup annotationGroup) {
         // When
-        AnnotationSrcGroup sortedGroup = sortAnnotationGroups(List.of(annotationGroup), reverseSourceOrderComparator)
-                .getFirst();
+        Map<Integer, List<AnnotationSrcFragment>> annotationOrderByGroupSrcStart =
+                sortAnnotationGroups(List.of(annotationGroup), reverseSourceOrderComparator);
 
         // Then
-        assertThat(sortedGroup.getAnnotationSrcFragments())
+        assertThat(findAnnotationOrder(annotationGroup, annotationOrderByGroupSrcStart))
                 .as(description)
-                .containsExactlyElementsOf(annotationGroup.getAnnotationSrcFragments());
+                .containsExactlyElementsOf(annotationGroup.getAnnotationSrcFragmentsInSrcOrder());
     }
 
     @Test
     void sort_confirmedDistinctHomonyms_keepsIndependentFamiliesSortable() {
         // Given
-        List<AnnotationSrcFragment> originalAnnotations = independentHomonymGroup.getAnnotationSrcFragments();
+        List<AnnotationSrcFragment> originalAnnotations = independentHomonymGroup.getAnnotationSrcFragmentsInSrcOrder();
 
         // When
-        AnnotationSrcGroup sortedGroup = sortAnnotationGroups(
-                        List.of(independentHomonymGroup), reverseSourceOrderComparator)
-                .getFirst();
+        Map<Integer, List<AnnotationSrcFragment>> annotationOrderByGroupSrcStart =
+                sortAnnotationGroups(List.of(independentHomonymGroup), reverseSourceOrderComparator);
 
         // Then
         assertThat(originalAnnotations.getFirst().getDescriptor().getOrderPreservationGroupKeys())
                 .doesNotContainAnyElementsOf(
                         originalAnnotations.get(1).getDescriptor().getOrderPreservationGroupKeys());
-        assertThat(collectTagArguments(sortedGroup))
+        assertThat(findAnnotationOrder(independentHomonymGroup, annotationOrderByGroupSrcStart).stream()
+                        .map(AnnotationSrcFragment::getDescriptor)
+                        .filter(annotationDescriptor ->
+                                annotationDescriptor.getName().equals("Tag"))
+                        .map(AnnotationDescriptor::getArguments)
+                        .toList())
                 .containsExactly("\"other-z\"", "\"other-a\"", "\"primary-z\"", "\"primary-a\"");
     }
 
     @NonNull
     private static List<String> collectTagArguments(AnnotationSrcGroup annotationGroup) {
-        return annotationGroup.getAnnotationSrcFragments().stream()
+        return annotationGroup.getAnnotationSrcFragmentsInSrcOrder().stream()
                 .map(AnnotationSrcFragment::getDescriptor)
                 .filter(annotationDescriptor -> annotationDescriptor.getName().equals("Tag"))
                 .map(AnnotationDescriptor::getArguments)

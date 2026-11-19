@@ -46,8 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   under `translator.spoon.annotation`. Parser tree traversal stays in `translator.spoon.SpoonTypeTreeUtils`;
   `core.spoon` retains shared models, cross-stage type operations, and relocation diagnostics alongside their
   package-private LIS helper. `MemberRelocation` retains its package-private constructor.
-- Restricted initial annotation-group and fragment construction to the scanner's package. Sorting copies existing gaps
-  and groups with prepared whitespace and order while retaining their original source ranges.
+- Restricted annotation-group and fragment construction to the scanner's package. The scanner prepares immutable gap
+  layouts once; sorting records changed orders of existing fragments in a separate map without copying source models.
 - Spoon type traversal streams declarations directly into indexes. Parsing statistics count types and members in one
   traversal without intermediate aggregate lists; removed redundant root-type and member-list helpers.
 - Unclosed annotation-argument diagnostics use the lexer's end-of-source offset without passing a diagnostic-only
@@ -154,8 +154,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   declaration-length measurement, saved lexer boundaries, and comment ownership.
 - Annotation scanning checks for raw `@` or its Unicode escape with one or more `u` markers before invoking JDT,
   avoiding lexical scans for unrelated escapes.
-- Inlined scanner-prepared gap values into `AnnotationSrcGap` and removed `AnnotationGapLayout`. Scanner construction
-  uses a named builder; sorting copies original state with a selected prefix while sharing immutable strings.
+- Stored scanner-prepared moved-gap layouts for separator requirements zero, one, and two in `AnnotationSrcGap`.
+  Rendering joins these values with shared content and exact separator strings without source analysis.
 - Source-text searches share private forward and backward scans with explicit character predicates. Java token
   measurement reuses bounded line-end lookup.
 - Source-text helpers use half-open ranges and explicit whitespace, indentation, and line-separator names. Indented
@@ -183,9 +183,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed the shared flow base to `AbstractSrcProcessingFlow` to reflect its source-processing pipeline role.
 - Sorting rejects repeated attempts for a shared Spoon AST through any model view or sorting entry point,
   including unchanged and failed first attempts. Clones retain the consumed state; reparsing starts a fresh lifecycle.
-- Annotation sorting preserves source-group order and collects its aggregate change flag while preparing groups,
-  removing group-iterator comparisons. Prepared groups and their flag reuse `ElementOrdering` without a separate
-  annotation result type or repeated change detection. Sorting output remains in the nested
+- Annotation sorting preserves source-group order and returns only changed fragment orders keyed by group start.
+  Map non-emptiness supplies the aggregate annotation-change flag without group-iterator comparisons or constructing
+  replacement groups. Sorting output remains in the nested
   `SpoonSorter.SpoonSortingResult`.
 - Sorting detects final declaration and annotation order changes while collecting output, removing separate AST and
   annotation-group checks. Each parsed model is sorted once per flow, enforced by the shared-AST sorting guard.
@@ -209,17 +209,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   comment whitespace, and CR/LF/CRLF handling.
 - Moved shared annotation source models into standalone `AnnotationSrcGroup`, with nested annotation, gap, and
   base-fragment types. `AnnotationSourceScanner` retains source parsing and fragment preparation.
-- Made the annotation group's common fragment base, mixed-sequence getter, and fixed gap-content getter private.
-  Typed annotation and gap lists remain available to sorting; printing consumes the prepared replacement code.
-- Annotation and gap fragments share source text and original ranges through `SrcFragment`. Sorting determines
-  annotation order and gap text. Groups retain unmodifiable views of both typed lists, require one gap per annotation,
-  and lazily interleave the mixed sequence through a static helper. Callers must not mutate handed-off lists.
-  `annotationSrcFragments` and internal `srcFragments` retain the group's current order. Each group lazily
-  caches its mixed sequence and `replacementCode`; independent group builder inputs are removed. Printing replaces
-  the original range with that block without inspecting fragment types or reconstructing annotation order.
-- Annotation gaps retain one ready-to-emit code string. The scanner prepares fixed content, whitespace-prefix choices,
-  and separator counts as immutable values. Sorting selects a prefix without reading or analyzing source
-  text, preserving repeated sorting, exact unchanged gaps, and comment attachment.
+- Made the annotation group's common fragment base and mixed-sequence getter private. Gap types, their source-order
+  list, fixed content, and prepared layouts remain package-private for the renderer; sorting sees only annotations.
+- Annotation and gap fragments retain original source text and ranges through `SrcFragment`. Groups retain unmodifiable
+  views of both source-order lists, require one gap per annotation, and lazily cache their original mixed sequence and
+  `replacementCode`. Callers must not mutate handed-off lists. Selected annotation orders remain separate from these
+  immutable source models.
+- `AnnotationSrcGroupRenderer` joins selected fragment orders with scanner-prepared gap layouts, preserving exact
+  unchanged gaps, comment attachment, blank-line ownership, and mixed line endings without constructing new source
+  groups or gaps. The source printer delegates this joining while replacing the original group range.
 - Merged annotation-group replacement into `SrcPrinterOutput`; declaration fragments and units without declared types
   share the same source-range copying method.
 - Removed redundant collection copies and wrappers in dependency ordering and CLI process test results.

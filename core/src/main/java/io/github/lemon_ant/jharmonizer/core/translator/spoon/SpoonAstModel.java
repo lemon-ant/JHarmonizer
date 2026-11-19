@@ -8,8 +8,10 @@ import static lombok.AccessLevel.PRIVATE;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,9 +28,15 @@ import spoon.reflect.declaration.CtTypeMember;
 @AllArgsConstructor(access = PRIVATE)
 public class SpoonAstModel {
 
-    /** Lexer-derived annotation groups; sorting replaces their immutable order for the printer. */
+    /** Read-only permutations of original fragments for changed groups, indexed by group source start. */
     @NonNull
     @With
+    @Builder.Default
+    // TODO Do we really need it here???
+    Map<Integer, List<AnnotationSrcFragment>> annotationOrderByGroupSrcStart = Map.of();
+
+    /** Original lexer-derived annotation groups, shared unchanged by sorting and printing. */
+    @NonNull
     List<AnnotationSrcGroup> annotationSrcGroups;
 
     /**

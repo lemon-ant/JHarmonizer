@@ -3,6 +3,7 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.findAnnotationOrder;
 import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.sortAnnotationGroups;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
@@ -222,14 +223,15 @@ class AnnotationTypeNameResolverTest {
                 .findFirst()
                 .orElseThrow(
                         () -> new IllegalStateException("No field annotation group at offset " + containerSrcOffset));
-        List<AnnotationSrcFragment> originalAnnotations = originalGroup.getAnnotationSrcFragments();
+        List<AnnotationSrcFragment> originalAnnotations = originalGroup.getAnnotationSrcFragmentsInSrcOrder();
         Comparator<AnnotationDescriptor> nameComparator = Comparator.comparing(AnnotationDescriptor::getName);
 
         // When
         String containerDependencyKey =
                 dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(containerSrcOffset, "Owner.Tags");
         String tagDependencyKey = dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(tagSrcOffset, "Tag");
-        List<AnnotationSrcGroup> sortedGroups = sortAnnotationGroups(List.of(originalGroup), nameComparator);
+        Map<Integer, List<AnnotationSrcFragment>> annotationOrderByGroupSrcStart =
+                sortAnnotationGroups(List.of(originalGroup), nameComparator);
 
         // Then
         assertThat(containerDependencyKey)
@@ -249,10 +251,8 @@ class AnnotationTypeNameResolverTest {
                         originalAnnotations.getLast().getDescriptor().getOrderPreservationGroupKeys());
         assertThat(originalAnnotations.getLast().getDescriptor().getOrderPreservationGroupKeys())
                 .contains(tagDependencyKey);
-        assertThat(sortedGroups)
-                .singleElement()
-                .satisfies(sortedGroup -> assertThat(sortedGroup.getAnnotationSrcFragments())
-                        .containsExactlyElementsOf(originalAnnotations));
+        assertThat(findAnnotationOrder(originalGroup, annotationOrderByGroupSrcStart))
+                .containsExactlyElementsOf(originalAnnotations);
     }
 
     @ParameterizedTest
@@ -455,13 +455,13 @@ class AnnotationTypeNameResolverTest {
                 .filteredOn(group -> group.getStart() == containerSrcOffset)
                 .singleElement()
                 .satisfies(group -> {
-                    assertThat(group.getAnnotationSrcFragments()).hasSize(2);
-                    assertThat(group.getAnnotationSrcFragments()
+                    assertThat(group.getAnnotationSrcFragmentsInSrcOrder()).hasSize(2);
+                    assertThat(group.getAnnotationSrcFragmentsInSrcOrder()
                                     .getFirst()
                                     .getDescriptor()
                                     .getOrderPreservationGroupKeys())
                             .isEqualTo(dependencyKeys.getFirst());
-                    assertThat(group.getAnnotationSrcFragments()
+                    assertThat(group.getAnnotationSrcFragmentsInSrcOrder()
                                     .getLast()
                                     .getDescriptor()
                                     .getOrderPreservationGroupKeys())
@@ -671,12 +671,12 @@ class AnnotationTypeNameResolverTest {
                 .filteredOn(group -> group.getStart() == srcOffset)
                 .singleElement()
                 .satisfies(group -> {
-                    assertThat(group.getAnnotationSrcFragments()).hasSize(2);
-                    assertThat(group.getAnnotationSrcFragments()
+                    assertThat(group.getAnnotationSrcFragmentsInSrcOrder()).hasSize(2);
+                    assertThat(group.getAnnotationSrcFragmentsInSrcOrder()
                                     .getFirst()
                                     .getDescriptor()
                                     .getOrderPreservationGroupKeys())
-                            .containsAnyElementsOf(group.getAnnotationSrcFragments()
+                            .containsAnyElementsOf(group.getAnnotationSrcFragmentsInSrcOrder()
                                     .getLast()
                                     .getDescriptor()
                                     .getOrderPreservationGroupKeys());
@@ -770,7 +770,7 @@ class AnnotationTypeNameResolverTest {
 
     private static void assertScannedUse(SpoonAstModel parsedModel, int srcOffset) {
         assertThat(parsedModel.getAnnotationSrcGroups().stream()
-                        .flatMap(annotationGroup -> annotationGroup.getAnnotationSrcFragments().stream()))
+                        .flatMap(annotationGroup -> annotationGroup.getAnnotationSrcFragmentsInSrcOrder().stream()))
                 .anyMatch(annotationFragment -> annotationFragment.getAnnotationStart() == srcOffset);
     }
 

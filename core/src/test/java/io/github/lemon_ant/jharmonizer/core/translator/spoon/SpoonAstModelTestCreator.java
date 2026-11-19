@@ -21,6 +21,7 @@ public class SpoonAstModelTestCreator {
         CtCompilationUnit compilationUnit = templateModel.getCompilationUnit().clone();
         return SpoonAstModel.builder()
                 .annotationSrcGroups(templateModel.getAnnotationSrcGroups())
+                .annotationOrderByGroupSrcStart(templateModel.getAnnotationOrderByGroupSrcStart())
                 .compilationUnit(compilationUnit)
                 .mainType(templateModel.getMainType().orElse(null))
                 .optOuts(templateModel.getOptOuts())

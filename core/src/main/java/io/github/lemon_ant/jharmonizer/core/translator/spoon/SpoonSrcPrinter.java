@@ -16,7 +16,6 @@ import io.github.lemon_ant.jharmonizer.core.spoon.SpoonGroupSeparatorUtils.Group
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcCharacterRange;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -52,16 +51,11 @@ public final class SpoonSrcPrinter {
         CtCompilationUnit compilationUnit = model.getCompilationUnit();
         String srcCode = model.getSrcCode();
         if (SpoonTypeTreeUtils.hasNoDeclaredTypes(compilationUnit)) {
-            SrcPrinterOutput srcPrinterOutput = new SrcPrinterOutput(srcCode, model.getAnnotationSrcGroups());
+            SrcPrinterOutput srcPrinterOutput = new SrcPrinterOutput(model);
             srcPrinterOutput.printSrcRange(0, srcCode.length());
             return new SerializedSrcWithSkippedTypeRanges(srcPrinterOutput.toString(), Map.of());
         }
-        return new Serialization(
-                        srcCode,
-                        model.getOptOuts().getSortingSkippedTypes(),
-                        printerConfig,
-                        model.getAnnotationSrcGroups())
-                .serializeCompilationUnit(compilationUnit);
+        return new Serialization(model, printerConfig).serializeCompilationUnit(compilationUnit);
     }
 
     /** Confines mutable printing state to one invocation. */
@@ -89,14 +83,10 @@ public final class SpoonSrcPrinter {
                     || !member.getAnnotations().isEmpty();
         }
 
-        private Serialization(
-                String srcCode,
-                Set<CtType<?>> sortingSkippedTypes,
-                PrinterConfig printerConfig,
-                List<AnnotationSrcGroup> annotationSrcGroups) {
-            srcPrinterOutput = new SrcPrinterOutput(srcCode, annotationSrcGroups);
-            this.srcCode = srcCode;
-            this.sortingSkippedTypes = sortingSkippedTypes;
+        private Serialization(SpoonAstModel model, PrinterConfig printerConfig) {
+            srcPrinterOutput = new SrcPrinterOutput(model);
+            srcCode = model.getSrcCode();
+            sortingSkippedTypes = model.getOptOuts().getSortingSkippedTypes();
             this.printerConfig = printerConfig;
         }
 

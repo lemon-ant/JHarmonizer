@@ -6,6 +6,7 @@ import static io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager.l
 import static io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager.overrideDefaultConfig;
 import static io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer.JHarmonizerConfigurationManager.parseFlexibleUnifiedConfigFromClasspathResource;
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationSorterTestUtils.findAnnotationOrder;
 import static io.github.lemon_ant.jharmonizer.core.testutils.SpoonTestCaseUtils.parseAstModelFromJavaFixtureResource;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModelTestCreator.copyWithClonedCompilationUnit;
@@ -25,6 +26,7 @@ import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import lombok.NonNull;
@@ -87,12 +89,13 @@ class SorterTest {
         assertThat(result.isAnnotationsReordered()).isTrue();
         assertThat(result.isMembersReordered()).isFalse();
         assertThat(result.isReordered()).isTrue();
-        assertThat(result.getSortedSpoonAstModel()
-                        .getAnnotationSrcGroups()
-                        .getFirst()
-                        .getAnnotationSrcFragments())
+        assertThat(result.getSortedSpoonAstModel().getAnnotationSrcGroups()).isSameAs(model.getAnnotationSrcGroups());
+        assertThat(findAnnotationOrder(
+                        model.getAnnotationSrcGroups().getFirst(),
+                        result.getSortedSpoonAstModel().getAnnotationOrderByGroupSrcStart()))
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Deprecated", "SuppressWarnings");
+        assertThat(model.getAnnotationOrderByGroupSrcStart()).isEmpty();
     }
 
     @Test
@@ -118,8 +121,9 @@ class SorterTest {
 
         // Then
         assertThat(result.isAnnotationsReordered()).isFalse();
-        assertThat(result.getSortedSpoonAstModel().getAnnotationSrcGroups())
-                .containsExactlyElementsOf(model.getAnnotationSrcGroups());
+        assertThat(result.getSortedSpoonAstModel().getAnnotationSrcGroups()).isSameAs(model.getAnnotationSrcGroups());
+        assertThat(result.getSortedSpoonAstModel().getAnnotationOrderByGroupSrcStart())
+                .isEmpty();
     }
 
     @ParameterizedTest
@@ -272,8 +276,11 @@ class SorterTest {
 
             // Then
             SpoonAstModel sortedModel = result.getSortedSpoonAstModel();
-            assertThat(sortedModel.getAnnotationSrcGroups().get(0))
-                    .isEqualTo(parsedModel.getAnnotationSrcGroups().get(0));
+            assertThat(sortedModel.getAnnotationSrcGroups()).isSameAs(parsedModel.getAnnotationSrcGroups());
+            assertThat(sortedModel.getAnnotationOrderByGroupSrcStart())
+                    .doesNotContainKey(
+                            parsedModel.getAnnotationSrcGroups().get(0).getStart())
+                    .containsKey(parsedModel.getAnnotationSrcGroups().get(1).getStart());
             assertThat(result.isAnnotationsReordered()).isTrue();
             assertThat(result.isMembersReordered()).isFalse();
             assertThat(result.isReordered()).isTrue();
@@ -285,24 +292,28 @@ class SorterTest {
             CompiledConfig argumentsConfig =
                     overrideDefaultConfig(parseFlexibleUnifiedConfigFromClasspathResource(requireClasspathResourceUrl(
                             "/test-cases/core/e2e/reorder/37-annotations-arguments-alpha/config.yml")));
-            SpoonAstModel parsedModel = parseAstModelFromJavaFixtureResource(
-                    requireClasspathResourceUrl(
-                            "/test-cases/core/e2e/reorder/37-annotations-arguments-alpha/input/AlphabeticalAnnotationArgumentsOrdering.java"));
+            SpoonAstModel parsedModel = SpoonParser.parseJavaSrcFile(createSrcFile(
+                    "@Tag(\"zz\") @Tag(\"aa\") class RepeatedAnnotationArguments {}\n"
+                            + "@java.lang.annotation.Repeatable(Tags.class) @interface Tag { String value(); }\n"
+                            + "@interface Tags { Tag[] value(); }\n",
+                    Path.of("RepeatedAnnotationArguments.java")));
             AnnotationSrcGroup repeatedAnnotations =
-                    parsedModel.getAnnotationSrcGroups().get(1);
-            SpoonAstModel repeatedAnnotationsModel = parsedModel.withAnnotationSrcGroups(List.of(repeatedAnnotations));
+                    parsedModel.getAnnotationSrcGroups().getFirst();
 
             // When
-            SortingResult result = new Sorter(argumentsConfig).sort(repeatedAnnotationsModel);
+            SortingResult result = new Sorter(argumentsConfig).sort(parsedModel);
 
             // Then
-            assertThat(repeatedAnnotations.getAnnotationSrcFragments())
+            assertThat(repeatedAnnotations.getAnnotationSrcFragmentsInSrcOrder())
                     .extracting(fragment -> fragment.getDescriptor().getName())
                     .containsExactly("Tag", "Tag");
-            assertThat(result.getSortedSpoonAstModel().getAnnotationSrcGroups()).containsExactly(repeatedAnnotations);
+            assertThat(result.getSortedSpoonAstModel().getAnnotationOrderByGroupSrcStart())
+                    .isEmpty();
             assertThat(result.isAnnotationsReordered()).isFalse();
             assertThat(result.isMembersReordered()).isFalse();
             assertThat(result.isReordered()).isFalse();
+            assertThat(result.getSortedSpoonAstModel().getAnnotationSrcGroups())
+                    .isSameAs(parsedModel.getAnnotationSrcGroups());
             assertThat(result.getMemberRelocations()).isEmpty();
         }
 
@@ -326,6 +337,10 @@ class SorterTest {
             assertThat(result.isAnnotationsReordered()).isFalse();
             assertThat(result.isMembersReordered()).isFalse();
             assertThat(result.isReordered()).isFalse();
+            assertThat(result.getSortedSpoonAstModel().getAnnotationSrcGroups())
+                    .isSameAs(parsedModel.getAnnotationSrcGroups());
+            assertThat(result.getSortedSpoonAstModel().getAnnotationOrderByGroupSrcStart())
+                    .isEmpty();
         }
     }
 
@@ -341,7 +356,7 @@ class SorterTest {
             SpoonAstModel model = SpoonParser.parseJavaSrcFile(createSrcFile(
                     "@Deprecated class SingleSortingAttempt { " + membersInSrcOrder + " }",
                     Path.of("SingleSortingAttempt.java")));
-            SpoonAstModel preexistingModelView = model.withAnnotationSrcGroups(List.of());
+            SpoonAstModel preexistingModelView = model.withAnnotationOrderByGroupSrcStart(Collections.emptyMap());
             SortingResult firstResult = defaultSorter.sort(model);
             List<SpoonAstModel> sharedModelViews =
                     List.of(model, preexistingModelView, firstResult.getSortedSpoonAstModel());

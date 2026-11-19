@@ -50,6 +50,8 @@ class OrderChangeCollector {
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    // TODO Simplify this constructor to pass only elementsBeforeOrdering collection and create elementsInSortedOrder
+    //   internally taking elementsBeforeOrdering.size as a parameter for the second collection
     private static final class ElementOrderAccumulator<TElement> {
 
         @NonNull

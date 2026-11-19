@@ -41,7 +41,8 @@ SpoonAstModel
     ├─ CtCompilationUnit       (Spoon AST)
     ├─ JHarmonizerOptOuts      (resolved file/type-scope opt-out directives)
     ├─ originalMemberOrder     (DFS source-order snapshot of CtTypeMembers)
-    ├─ annotationSrcGroups     (group bounds, mixed annotation/gap fragments, and lazy replacement code)
+    ├─ annotationSrcGroups     (immutable source fragments, gap layouts, and original replacement code)
+    ├─ annotationOrderByGroupSrcStart (empty during parsing; changed orders after sorting)
     └─ srcCode                 (exact original text for source offsets)
     ↓
 Sorter → SpoonSrcPrinter → Formatter
@@ -69,25 +70,24 @@ source-member traversal used across processing stages.
 For the annotation identity algorithm, lookup precedence, stopping conditions, and worked examples, see
 [annotation type resolution](annotation-type-resolution.md) (in Russian).
 The groups belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates
-declaration order in the AST and returns a model wrapper with the new immutable group order. AST annotation lists
+declaration order in the AST and returns a model wrapper with `annotationOrderByGroupSrcStart`: only changed groups map
+from their original start offsets to existing fragments in sorted order. The original groups and AST annotation lists
 remain unchanged. Printing consumes that returned model together with the flow's `PrinterConfig`;
 annotation order is neither stored in `CtCompilationUnit` metadata nor captured by a serialization supplier.
 Parsing does not depend on printer settings. The flow passes its immutable configuration to
 `SrcAstTranslator.serialize(model, printerConfig)` for each printing invocation.
 The scanner collects annotations and gaps in separate lists with source bounds and comment ownership. The group
-constructor retains unmodifiable views; callers must not modify the lists after handoff. Initial group construction
-and fragment builders are package-private. The scanner starts fresh lists for each group. The sorter selects the new
-annotation order and gap prefixes, then copies existing gaps with `copyWithLeadingWhitespace` and the group with
-`copyWithFragments`. These model operations retain the original ranges and prepared source values without selecting
-order or whitespace themselves.
-`annotationSrcFragments` represents source order after scanning and comparator order after sorting. The private
-`srcFragments` sequence is assembled by a static interleaving helper when replacement code is requested, then cached.
-Each group lazily concatenates and caches its replacement code from that sequence. All original ranges remain unchanged.
-Each gap contains one ready-to-emit code string and scanner-prepared fixed content, original and relocated whitespace
-prefixes, indentation, and available physical separators. These values remain independent of the selected prefix;
-prepared gap copies share their immutable strings. An annotation whose line comment already ends with a Unicode escape
-requires no additional physical separator. Sorting uses these prepared
-components and counts without reading or analyzing the original source.
+constructor retains unmodifiable views; callers must not modify the lists after handoff. Group, gap, and layout
+construction and the annotation-fragment builder are package-private. The scanner starts fresh lists for each group
+and prepares moved-gap layouts for separator requirements zero, one, and two. Each layout contains the ready leading
+whitespace and whether the selected annotation's exact separators are required. Fixed gap content and original code
+remain separate and unchanged. An annotation whose line comment already ends with a Unicode escape needs no additional
+physical separator.
+`annotationSrcFragmentsInSrcOrder` always retains source order within its group. The private `srcFragments` sequence
+and `replacementCode` lazily cache the original text. Sorting records a separate order without creating new gaps or groups.
+`AnnotationSrcGroupRenderer` joins that order with the prepared layouts and preserves an original annotation/gap pair
+verbatim. A missing order uses the group's cached original code. Rendering does not analyze source text or reassign
+comment ownership; the source printer only delegates this joining while replacing the original range.
 
 ## What is preserved
 

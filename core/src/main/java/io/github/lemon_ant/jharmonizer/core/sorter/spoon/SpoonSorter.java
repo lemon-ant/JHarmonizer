@@ -14,7 +14,7 @@ import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.Member
 import io.github.lemon_ant.jharmonizer.core.sorter.spoon.dependency_graph.MemberDependencyGraphBuilder;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
 import java.io.File;
 import java.util.Comparator;
 import java.util.List;
@@ -53,9 +53,9 @@ public class SpoonSorter {
     private final CompiledConfig compiledConfig;
 
     /**
-     * Sorts declaration order in the AST and finalizes sorted annotation source groups.
+     * Sorts declaration order in the AST and records changed annotation permutations.
      * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
-     * @return model with the updated AST, immutable annotation groups, and invocation change flags
+     * @return model with the updated AST, original annotation groups, changed annotation orders, and invocation flags
      * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
      */
     @NonNull
@@ -67,12 +67,15 @@ public class SpoonSorter {
         for (CtType<?> type : compilationUnit.getDeclaredTypes()) {
             membersReordered |= sortTypeRecursively(type, sortingSkippedTypes, srcFile);
         }
-        ElementOrdering<AnnotationSrcGroup> annotationOrdering = SpoonAnnotationSorter.sort(
-                spoonAstModel.getAnnotationSrcGroups(), sortingSkippedTypes, compiledConfig.getAnnotationComparator());
+        Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart =
+                SpoonAnnotationSorter.sort(
+                        spoonAstModel.getAnnotationSrcGroups(),
+                        sortingSkippedTypes,
+                        compiledConfig.getAnnotationComparator());
         return new SpoonSortingResult(
-                annotationOrdering.isReordered(),
+                !sortedAnnotationSrcFragmentsByGroupSrcStart.isEmpty(),
                 membersReordered,
-                spoonAstModel.withAnnotationSrcGroups(annotationOrdering.getElementsInSortedOrder()));
+                spoonAstModel.withAnnotationOrderByGroupSrcStart(sortedAnnotationSrcFragmentsByGroupSrcStart));
     }
 
     @NonNull

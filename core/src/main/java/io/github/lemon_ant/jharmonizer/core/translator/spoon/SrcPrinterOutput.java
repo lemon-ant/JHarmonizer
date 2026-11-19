@@ -7,13 +7,19 @@ import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findCo
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationStart;
 
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroupRenderer;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import lombok.NonNull;
 
 /** Owns one serialization buffer and copies source slices without intermediate strings. */
 final class SrcPrinterOutput {
+
+    @NonNull
+    private final Map<Integer, List<AnnotationSrcFragment>> annotationOrderByGroupSrcStart;
 
     @NonNull
     private final NavigableMap<Integer, AnnotationSrcGroup> annotationSrcGroupsBySrcStart = new TreeMap<>();
@@ -36,12 +42,12 @@ final class SrcPrinterOutput {
 
     /**
      * Creates an output buffer using the original source's size and dominant line separator.
-     * @param srcCode original source
-     * @param annotationSrcGroups annotation groups with prepared replacement code
+     * @param model original source and immutable annotation fragments with optional selected orders
      */
-    SrcPrinterOutput(@NonNull String srcCode, @NonNull List<AnnotationSrcGroup> annotationSrcGroups) {
-        this.srcCode = srcCode;
-        annotationSrcGroups.forEach(group -> annotationSrcGroupsBySrcStart.put(group.getStart(), group));
+    SrcPrinterOutput(@NonNull SpoonAstModel model) {
+        srcCode = model.getSrcCode();
+        annotationOrderByGroupSrcStart = model.getAnnotationOrderByGroupSrcStart();
+        model.getAnnotationSrcGroups().forEach(group -> annotationSrcGroupsBySrcStart.put(group.getStart(), group));
         lineSeparator = detectDominantLineSeparator(srcCode);
         buffer = new StringBuilder(srcCode.length());
     }
@@ -106,7 +112,9 @@ final class SrcPrinterOutput {
                 // A slice ending inside a group cannot safely reorder that group independently.
                 continue;
             }
-            buffer.append(srcCode, cursor, group.getStart()).append(group.getReplacementCode());
+            buffer.append(srcCode, cursor, group.getStart())
+                    .append(AnnotationSrcGroupRenderer.renderReplacement(
+                            group, annotationOrderByGroupSrcStart.get(group.getStart())));
             cursor = group.getEndExclusive();
         }
         buffer.append(srcCode, cursor, endExclusive);

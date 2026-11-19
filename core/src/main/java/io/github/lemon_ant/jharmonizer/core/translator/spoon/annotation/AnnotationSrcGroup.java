@@ -6,7 +6,6 @@ import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -18,15 +17,16 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 
-/** A source replacement initialized in source order and finalized in sorted order before printing. */
+/** Immutable annotation fragments, source slots, and placement layouts prepared once by the scanner. */
 @Value
 public class AnnotationSrcGroup {
 
-    /** Current annotation order: source order after scanning, comparator order after sorting. */
+    /** Annotation fragments in this group's original source order, retained unchanged by sorting. */
     @NonNull
-    List<AnnotationSrcFragment> annotationSrcFragments;
+    List<AnnotationSrcFragment> annotationSrcFragmentsInSrcOrder;
 
-    /** Gap slots retain source order and ranges; sorting can replace their text for new preceding annotations. */
+    /** Immutable gap slots and placement profiles in their original source order. */
+    @Getter(AccessLevel.PACKAGE)
     @NonNull
     List<AnnotationSrcGap> annotationSrcGapsInSrcOrder;
 
@@ -34,72 +34,58 @@ public class AnnotationSrcGroup {
     int endExclusive;
 
     /**
-     * Concatenated fragment text, computed once on first access.
-     * Requests the lazy fragment sequence only when this group's replacement is needed.
+     * Original group text, computed once from source-order fragments.
+     * Other annotation orders are rendered from the same immutable pieces without replacing this group.
      */
     @Getter(lazy = true)
     @NonNull
     String replacementCode =
             getSrcFragments().stream().map(SrcFragment::getSrcCode).collect(Collectors.joining());
 
-    /** Internal annotation/gap sequence, assembled and cached when replacement code is requested. */
+    /** Original annotation/gap sequence, assembled and cached when original group text is requested. */
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     @NonNull
-    List<SrcFragment> srcFragments = interleaveFragments(annotationSrcFragments, annotationSrcGapsInSrcOrder);
+    List<SrcFragment> srcFragments = interleaveFragments(annotationSrcFragmentsInSrcOrder, annotationSrcGapsInSrcOrder);
 
     /** First attached leading comment, or the first annotation's opening {@code @}. */
     int start;
 
     @NonNull
     private static List<SrcFragment> interleaveFragments(
-            List<AnnotationSrcFragment> annotationSrcFragments, List<AnnotationSrcGap> annotationSrcGapsInSrcOrder) {
-        List<SrcFragment> fragmentsInCurrentOrder =
-                new ArrayList<>(annotationSrcFragments.size() + annotationSrcGapsInSrcOrder.size());
-        for (int annotationIndex = 0; annotationIndex < annotationSrcFragments.size(); annotationIndex++) {
-            fragmentsInCurrentOrder.add(annotationSrcFragments.get(annotationIndex));
-            fragmentsInCurrentOrder.add(annotationSrcGapsInSrcOrder.get(annotationIndex));
+            List<AnnotationSrcFragment> annotationSrcFragmentsInSrcOrder,
+            List<AnnotationSrcGap> annotationSrcGapsInSrcOrder) {
+        List<SrcFragment> fragmentsInSrcOrder =
+                new ArrayList<>(annotationSrcFragmentsInSrcOrder.size() + annotationSrcGapsInSrcOrder.size());
+        for (int annotationIndex = 0; annotationIndex < annotationSrcFragmentsInSrcOrder.size(); annotationIndex++) {
+            fragmentsInSrcOrder.add(annotationSrcFragmentsInSrcOrder.get(annotationIndex));
+            fragmentsInSrcOrder.add(annotationSrcGapsInSrcOrder.get(annotationIndex));
         }
-        return Collections.unmodifiableList(fragmentsInCurrentOrder);
+        return Collections.unmodifiableList(fragmentsInSrcOrder);
     }
 
     /**
      * Retains read-only views and lazily pairs each annotation with the gap at the same index.
      * Callers must not modify either list after handoff. The final annotation also requires a gap, possibly empty.
-     * @param annotationSrcFragments annotations in this group's current order
-     * @param annotationSrcGapsInSrcOrder gap slots in original source order, with text prepared for the current annotations
+     * @param annotationSrcFragmentsInSrcOrder annotations in original source order
+     * @param annotationSrcGapsInSrcOrder gap slots in original source order, with all placement layouts prepared
      * @param start first offset of the original group
      * @param endExclusive first source offset after the original group
      * @throws IllegalArgumentException if annotations are empty or the two lists have different sizes
      */
     AnnotationSrcGroup(
-            @NonNull List<AnnotationSrcFragment> annotationSrcFragments,
+            @NonNull List<AnnotationSrcFragment> annotationSrcFragmentsInSrcOrder,
             @NonNull List<AnnotationSrcGap> annotationSrcGapsInSrcOrder,
             int start,
             int endExclusive) {
-        this.annotationSrcFragments = Collections.unmodifiableList(annotationSrcFragments);
+        this.annotationSrcFragmentsInSrcOrder = Collections.unmodifiableList(annotationSrcFragmentsInSrcOrder);
         this.annotationSrcGapsInSrcOrder = Collections.unmodifiableList(annotationSrcGapsInSrcOrder);
-        if (this.annotationSrcFragments.isEmpty()
-                || this.annotationSrcFragments.size() != this.annotationSrcGapsInSrcOrder.size()) {
+        if (this.annotationSrcFragmentsInSrcOrder.isEmpty()
+                || this.annotationSrcFragmentsInSrcOrder.size() != this.annotationSrcGapsInSrcOrder.size()) {
             throw new IllegalArgumentException(
                     "An annotation group requires at least one annotation and exactly one gap per annotation");
         }
         this.start = start;
         this.endExclusive = endExclusive;
-    }
-
-    /**
-     * Copies prepared annotation and gap fragments while retaining this group's original source range.
-     * The copy derives its own fragment sequence and replacement text; cached values of this group are not reused.
-     * Callers must not modify the supplied lists after handoff.
-     * @param annotationSrcFragments annotations in the prepared current order
-     * @param annotationSrcGapsInSrcOrder prepared gap slots in original source order
-     * @return a group with the supplied fragments and the same source range
-     */
-    @NonNull
-    public AnnotationSrcGroup copyWithFragments(
-            @NonNull List<AnnotationSrcFragment> annotationSrcFragments,
-            @NonNull List<AnnotationSrcGap> annotationSrcGapsInSrcOrder) {
-        return new AnnotationSrcGroup(annotationSrcFragments, annotationSrcGapsInSrcOrder, start, endExclusive);
     }
 
     /**
@@ -164,83 +150,54 @@ public class AnnotationSrcGroup {
         }
     }
 
-    /** Ready-to-emit gap text retaining scanner-prepared values independently of the selected whitespace prefix. */
+    /** Ready gap prefix and whether the annotation's exact separator text precedes it. */
+    @Value
+    @Getter(AccessLevel.PACKAGE)
+    @AllArgsConstructor(access = AccessLevel.PACKAGE)
+    static class AnnotationGapLayout {
+        boolean annotationSeparatorsRequired;
+
+        @NonNull
+        String leadingWhitespace;
+    }
+
+    /** Original gap text and scanner-prepared whitespace layouts for possible annotation placements. */
     @Value
     @EqualsAndHashCode(callSuper = true)
     @ToString(callSuper = true)
-    public static class AnnotationSrcGap extends SrcFragment {
+    static class AnnotationSrcGap extends SrcFragment {
 
-        /** Independent comments and all following text, excluding leading whitespace. */
-        @Getter(AccessLevel.NONE)
+        /** Fixed comments and text shared by every placement of this source gap. */
+        @Getter(AccessLevel.PACKAGE)
         @NonNull
         String content;
 
-        /** Destination line indentation to append after separators supplied by an annotation. */
+        /** Layouts indexed by the preceding annotation's required line-separator count. */
+        @Getter(AccessLevel.PACKAGE)
         @NonNull
-        String indentation;
-
-        /** Exact source prefix, restored when the original preceding annotation returns to this gap. */
-        @NonNull
-        String originalLeadingWhitespace;
-
-        /** Prefix for a moved annotation: original whitespace, or one line break after a departing lower block. */
-        @NonNull
-        String relocatedLeadingWhitespace;
-
-        /** Available physical separators; zero when an attached lower block takes its blank lines with it. */
-        int retainedLineSeparatorCount;
+        List<AnnotationGapLayout> movedLayoutsByRequiredSeparatorCount;
 
         /**
-         * Combines a selected prefix with fixed content, retaining original source values for subsequent ordering.
-         * Immutable strings remain shared with the supplied gap.
-         * @param originalGap gap whose original values and source range are retained
-         * @param selectedLeadingWhitespace prefix selected for the current preceding annotation
+         * Retains original gap code and immutable layouts prepared while scanning.
+         * @param content fixed gap content without leading whitespace
+         * @param endExclusive original gap end offset
+         * @param movedLayoutsByRequiredSeparatorCount ready layouts for requirements zero, one, and two
+         * @param srcCode complete original gap text
+         * @param start original gap start offset
          */
-        private AnnotationSrcGap(AnnotationSrcGap originalGap, String selectedLeadingWhitespace) {
-            super(
-                    originalGap.getEndExclusive(),
-                    selectedLeadingWhitespace + originalGap.content,
-                    originalGap.getStart());
-            content = originalGap.content;
-            indentation = originalGap.indentation;
-            originalLeadingWhitespace = originalGap.originalLeadingWhitespace;
-            relocatedLeadingWhitespace = originalGap.relocatedLeadingWhitespace;
-            retainedLineSeparatorCount = originalGap.retainedLineSeparatorCount;
-        }
-
-        // The scanner supplies original values; the emitted text initially uses the original whitespace prefix.
-        @Builder(access = AccessLevel.PACKAGE)
-        private AnnotationSrcGap(
-                String content,
-                String indentation,
-                String originalLeadingWhitespace,
-                String relocatedLeadingWhitespace,
-                int retainedLineSeparatorCount,
-                int start,
-                int endExclusive) {
-            super(endExclusive, originalLeadingWhitespace + content, start);
-            this.content = Objects.requireNonNull(content, "content");
-            this.indentation = Objects.requireNonNull(indentation, "indentation");
-            this.originalLeadingWhitespace =
-                    Objects.requireNonNull(originalLeadingWhitespace, "originalLeadingWhitespace");
-            this.relocatedLeadingWhitespace =
-                    Objects.requireNonNull(relocatedLeadingWhitespace, "relocatedLeadingWhitespace");
-            this.retainedLineSeparatorCount = retainedLineSeparatorCount;
-        }
-
-        /**
-         * Copies this parsed gap with a selected whitespace prefix, preserving its content and original metadata.
-         * The caller selects the prefix; this method only combines it with the retained content.
-         * @param selectedLeadingWhitespace prepared prefix for this gap
-         * @return gap with the selected prefix and the same content, source range, and original whitespace values
-         */
-        @NonNull
-        public AnnotationSrcGap copyWithLeadingWhitespace(@NonNull String selectedLeadingWhitespace) {
-            return new AnnotationSrcGap(this, selectedLeadingWhitespace);
+        AnnotationSrcGap(
+                @NonNull String content,
+                int endExclusive,
+                @NonNull List<AnnotationGapLayout> movedLayoutsByRequiredSeparatorCount,
+                @NonNull String srcCode,
+                int start) {
+            super(endExclusive, srcCode, start);
+            this.content = content;
+            this.movedLayoutsByRequiredSeparatorCount = List.copyOf(movedLayoutsByRequiredSeparatorCount);
         }
     }
 
-    /** Immutable fragment text and its original source range, retained even when sorting changes its position or text. */
+    /** Immutable scanner-prepared fragment text and its original source range. */
     @Value
     @NonFinal
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -249,7 +206,7 @@ public class AnnotationSrcGroup {
         /** First offset after the original fragment; replacement text may have a different length. */
         int endExclusive;
 
-        /** Text to emit for this fragment, including any gap adjustment already made by the sorter. */
+        /** Original annotation or gap text, before selecting a different annotation order. */
         @NonNull
         String srcCode;
 

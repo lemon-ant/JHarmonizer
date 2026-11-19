@@ -7,10 +7,11 @@ import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonAnnotationS
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,10 +60,9 @@ class SrcPrinterOutputTest {
 
     @NonNull
     private static SrcPrinterOutput createOutputWithSortedAnnotations(String srcCode) {
-        List<AnnotationSrcGroup> annotationSrcGroups = sortAnnotationGroups(
-                SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")))
-                        .getAnnotationSrcGroups(),
-                Comparator.comparing(AnnotationDescriptor::getName));
-        return new SrcPrinterOutput(srcCode, annotationSrcGroups);
+        SpoonAstModel parsedModel = SpoonParser.parseJavaSrcFile(createSrcFile(srcCode, Path.of("Sample.java")));
+        Map<Integer, List<AnnotationSrcFragment>> annotationOrderByGroupSrcStart = sortAnnotationGroups(
+                parsedModel.getAnnotationSrcGroups(), Comparator.comparing(AnnotationDescriptor::getName));
+        return new SrcPrinterOutput(parsedModel.withAnnotationOrderByGroupSrcStart(annotationOrderByGroupSrcStart));
     }
 }

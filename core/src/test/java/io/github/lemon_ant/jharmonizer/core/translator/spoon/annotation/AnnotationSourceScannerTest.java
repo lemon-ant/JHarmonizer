@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationGapLayout;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcGap;
 import java.net.URL;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import lombok.NonNull;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -40,7 +42,7 @@ class AnnotationSourceScannerTest {
         // When
         AnnotationSrcFragment fragment = scanAnnotationSrcGroups(srcCode)
                 .get(0)
-                .getAnnotationSrcFragments()
+                .getAnnotationSrcFragmentsInSrcOrder()
                 .get(1);
 
         // Then
@@ -68,7 +70,7 @@ class AnnotationSourceScannerTest {
         AnnotationSrcGroup group = groups.getFirst();
         assertThat(group.getStart()).isZero();
         assertThat(group.getEndExclusive()).isEqualTo(groupEnd);
-        assertThat(group.getAnnotationSrcFragments())
+        assertThat(group.getAnnotationSrcFragmentsInSrcOrder())
                 .extracting(
                         AnnotationSrcFragment::getStart,
                         AnnotationSrcFragment::getEndExclusive,
@@ -95,7 +97,7 @@ class AnnotationSourceScannerTest {
         // Then
         assertThat(group.getStart()).isZero();
         assertThat(group.getEndExclusive()).isEqualTo(groupEnd);
-        assertThat(group.getAnnotationSrcFragments())
+        assertThat(group.getAnnotationSrcFragmentsInSrcOrder())
                 .extracting(
                         AnnotationSrcFragment::getStart,
                         AnnotationSrcFragment::getEndExclusive,
@@ -131,13 +133,17 @@ class AnnotationSourceScannerTest {
 
         // Then
         AnnotationSrcGroup group = groups.get(0);
-        AnnotationSrcFragment fragment = group.getAnnotationSrcFragments().get(0);
+        AnnotationSrcFragment fragment =
+                group.getAnnotationSrcFragmentsInSrcOrder().get(0);
         assertThat(fragment.getDescriptor().getDeclarationLength()).isEqualTo(annotation.length());
         assertThat(fragment.getStart()).isEqualTo(prefix.length());
         assertThat(fragment.getSrcCode()).isEqualTo(annotation + " /* trailing */");
         assertThat(group.getStart()).isEqualTo(prefix.length());
         assertThat(group.getEndExclusive()).isEqualTo(srcCode.indexOf("class"));
-        assertThat(group.getAnnotationSrcFragments().get(1).getDescriptor().getDeclarationLength())
+        assertThat(group.getAnnotationSrcFragmentsInSrcOrder()
+                        .get(1)
+                        .getDescriptor()
+                        .getDeclarationLength())
                 .isEqualTo("@B".length());
     }
 
@@ -151,7 +157,7 @@ class AnnotationSourceScannerTest {
 
         // When
         List<AnnotationSrcFragment> annotationSrcFragments =
-                scanAnnotationSrcGroups(srcCode).getFirst().getAnnotationSrcFragments();
+                scanAnnotationSrcGroups(srcCode).getFirst().getAnnotationSrcFragmentsInSrcOrder();
 
         // Then
         assertThat(annotationSrcFragments)
@@ -164,7 +170,7 @@ class AnnotationSourceScannerTest {
         // When
         AnnotationSrcFragment fragment = scanAnnotationSrcGroups("@A // note\\u000a @B class Sample {}")
                 .get(0)
-                .getAnnotationSrcFragments()
+                .getAnnotationSrcFragmentsInSrcOrder()
                 .get(0);
 
         // Then
@@ -172,6 +178,24 @@ class AnnotationSourceScannerTest {
         assertThat(fragment.getTrailingLineSeparatorCount()).isZero();
         assertThat(fragment.requiresBlankLineAfterTrailingComments()).isFalse();
         assertThat(fragment.getTrailingLineSeparators()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideGapLayoutCases")
+    void scan_gapWhitespace_preparesLayoutsForAllSeparatorRequirements(
+            @NonNull String annotationGroupCode, @NonNull List<Tuple> expectedLayouts) {
+        // When
+        AnnotationSrcGroup group =
+                scanAnnotationSrcGroups(annotationGroupCode + "class Sample {}").getFirst();
+        AnnotationSrcGap gap = group.getAnnotationSrcGapsInSrcOrder().getFirst();
+
+        // Then
+        assertThat(gap.getMovedLayoutsByRequiredSeparatorCount())
+                .extracting(
+                        AnnotationGapLayout::isAnnotationSeparatorsRequired, AnnotationGapLayout::getLeadingWhitespace)
+                .containsExactlyElementsOf(expectedLayouts);
+        assertThat(gap.getSrcCode()).isEqualTo(annotationGroupCode.substring(gap.getStart(), gap.getEndExclusive()));
+        assertThat(group.getReplacementCode()).isEqualTo(annotationGroupCode);
     }
 
     @ParameterizedTest
@@ -200,13 +224,13 @@ class AnnotationSourceScannerTest {
     void scan_lineComment_measuresCommentWithoutLineSeparator(@NonNull String lineSeparator) {
         List<AnnotationSrcGroup> groups = scanAnnotationSrcGroups("@A(// note  " + lineSeparator + "\"aa\")");
         assertThat(groups.get(0)
-                        .getAnnotationSrcFragments()
+                        .getAnnotationSrcFragmentsInSrcOrder()
                         .get(0)
                         .getDescriptor()
                         .getDeclarationLength())
                 .isEqualTo("@A(// note  \"aa\")".length());
         assertThat(groups.get(0)
-                        .getAnnotationSrcFragments()
+                        .getAnnotationSrcFragmentsInSrcOrder()
                         .get(0)
                         .getDescriptor()
                         .getArguments())
@@ -219,9 +243,9 @@ class AnnotationSourceScannerTest {
                 "@Deprecated class AnnotationSrcGroups { @SuppressWarnings(\"all\") void execute() {} }");
         assertThat(groups)
                 .hasSize(2)
-                .allSatisfy(
-                        group -> assertThat(group.getAnnotationSrcFragments()).hasSize(1));
-        assertThat(groups.stream().flatMap(group -> group.getAnnotationSrcFragments().stream()))
+                .allSatisfy(group ->
+                        assertThat(group.getAnnotationSrcFragmentsInSrcOrder()).hasSize(1));
+        assertThat(groups.stream().flatMap(group -> group.getAnnotationSrcFragmentsInSrcOrder().stream()))
                 .extracting(fragment -> fragment.getDescriptor().getName())
                 .containsExactly("Deprecated", "SuppressWarnings");
         assertThat(groups)
@@ -238,7 +262,7 @@ class AnnotationSourceScannerTest {
 
         // Then
         assertThat(annotationGroupsInSrcOrder.stream()
-                        .map(annotationGroup -> annotationGroup.getAnnotationSrcFragments().stream()
+                        .map(annotationGroup -> annotationGroup.getAnnotationSrcFragmentsInSrcOrder().stream()
                                 .map(annotationFragment ->
                                         annotationFragment.getDescriptor().getOrderPreservationGroupKeys())
                                 .toList())
@@ -271,11 +295,18 @@ class AnnotationSourceScannerTest {
     void scan_returnedGroups_preventsMutation(@NonNull String annotationDeclarations, int expectedGroupKeyCount) {
         List<AnnotationSrcGroup> groups = scanAnnotationSrcGroups(annotationDeclarations + " class Sample {}");
         assertThatThrownBy(groups::clear).isInstanceOf(UnsupportedOperationException.class);
-        assertThatThrownBy(() -> groups.get(0).getAnnotationSrcFragments().clear())
+        assertThatThrownBy(() ->
+                        groups.get(0).getAnnotationSrcFragmentsInSrcOrder().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
         assertThatThrownBy(() -> groups.get(0).getAnnotationSrcGapsInSrcOrder().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
-        assertThat(groups.getFirst().getAnnotationSrcFragments()).allSatisfy(annotationSrcFragment -> {
+        assertThatThrownBy(() -> groups.getFirst()
+                        .getAnnotationSrcGapsInSrcOrder()
+                        .getFirst()
+                        .getMovedLayoutsByRequiredSeparatorCount()
+                        .clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThat(groups.getFirst().getAnnotationSrcFragmentsInSrcOrder()).allSatisfy(annotationSrcFragment -> {
             Set<String> groupKeys = annotationSrcFragment.getDescriptor().getOrderPreservationGroupKeys();
             assertThat(groupKeys).hasSize(expectedGroupKeyCount);
             assertThatThrownBy(groupKeys::clear).isInstanceOf(UnsupportedOperationException.class);
@@ -292,7 +323,7 @@ class AnnotationSourceScannerTest {
 
         // When
         List<AnnotationSrcFragment> fragments =
-                scanAnnotationSrcGroups(srcCode).get(0).getAnnotationSrcFragments();
+                scanAnnotationSrcGroups(srcCode).get(0).getAnnotationSrcFragmentsInSrcOrder();
 
         // Then
         AnnotationSrcFragment firstFragment = fragments.get(0);
@@ -315,7 +346,7 @@ class AnnotationSourceScannerTest {
         // When
         AnnotationSrcFragment fragment = scanAnnotationSrcGroups(annotation)
                 .getFirst()
-                .getAnnotationSrcFragments()
+                .getAnnotationSrcFragmentsInSrcOrder()
                 .getFirst();
 
         // Then
@@ -335,7 +366,7 @@ class AnnotationSourceScannerTest {
         // When
         AnnotationSrcFragment fragment = scanAnnotationSrcGroups(srcCode)
                 .get(0)
-                .getAnnotationSrcFragments()
+                .getAnnotationSrcFragmentsInSrcOrder()
                 .get(0);
 
         // Then
@@ -355,7 +386,7 @@ class AnnotationSourceScannerTest {
         // When
         AnnotationSrcFragment fragment = scanAnnotationSrcGroups(srcCode)
                 .get(0)
-                .getAnnotationSrcFragments()
+                .getAnnotationSrcFragmentsInSrcOrder()
                 .get(0);
 
         // Then
@@ -385,13 +416,13 @@ class AnnotationSourceScannerTest {
         String srcCode = prefix + annotation + " /* trailing */ class Sample {}";
         AnnotationSrcFragment translatedFragment = scanAnnotationSrcGroups(translatedAnnotation)
                 .getFirst()
-                .getAnnotationSrcFragments()
+                .getAnnotationSrcFragmentsInSrcOrder()
                 .getFirst();
 
         // When
         AnnotationSrcFragment fragment = scanAnnotationSrcGroups(srcCode)
                 .getFirst()
-                .getAnnotationSrcFragments()
+                .getAnnotationSrcFragmentsInSrcOrder()
                 .getFirst();
 
         // Then
@@ -416,7 +447,7 @@ class AnnotationSourceScannerTest {
         // When
         AnnotationSrcFragment fragment = scanAnnotationSrcGroups(annotation)
                 .getFirst()
-                .getAnnotationSrcFragments()
+                .getAnnotationSrcFragmentsInSrcOrder()
                 .getFirst();
 
         // Then
@@ -429,17 +460,27 @@ class AnnotationSourceScannerTest {
     void scan_whitespaceAndComments_measuresTokenAndCommentText() {
         List<AnnotationSrcGroup> groups = scanAnnotationSrcGroups("@A (value = 1 /* note */ + 2) @B class Sample {}");
         assertThat(groups.get(0)
-                        .getAnnotationSrcFragments()
+                        .getAnnotationSrcFragmentsInSrcOrder()
                         .get(0)
                         .getDescriptor()
                         .getDeclarationLength())
                 .isEqualTo("@A(value=1/* note */+2)".length());
         assertThat(groups.get(0)
-                        .getAnnotationSrcFragments()
+                        .getAnnotationSrcFragmentsInSrcOrder()
                         .get(0)
                         .getDescriptor()
                         .getArguments())
                 .isEqualTo("value=1+2");
+    }
+
+    @NonNull
+    private static Stream<Arguments> provideGapLayoutCases() {
+        return Stream.of(
+                Arguments.of("@A @B ", List.of(tuple(false, " "), tuple(true, ""), tuple(true, ""))),
+                Arguments.of("@A\n@B ", List.of(tuple(false, "\n"), tuple(false, "\n"), tuple(true, ""))),
+                Arguments.of("@A\n\n@B ", List.of(tuple(false, "\n\n"), tuple(false, "\n\n"), tuple(false, "\n\n"))),
+                Arguments.of("@A\r\n\t@B ", List.of(tuple(false, "\r\n\t"), tuple(false, "\r\n\t"), tuple(true, "\t"))),
+                Arguments.of("@A\n// lower\n\n@B ", List.of(tuple(false, "\n"), tuple(true, ""), tuple(true, ""))));
     }
 
     @NonNull
