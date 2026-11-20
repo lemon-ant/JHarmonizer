@@ -69,8 +69,9 @@ The scanner and its type-name, import, inheritance, and dependency preparation h
 [`SpoonTypeTreeUtils`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeTreeUtils.java).
 The neutral `core.spoon.SpoonTypeUtils` retains only main-type selection, effective member boundaries, and explicit
 source-member traversal used across processing stages.
-For the annotation identity algorithm, lookup precedence, stopping conditions, and worked examples, see
-[annotation type resolution](annotation-type-resolution.md) (in Russian).
+For lookup precedence, stopping conditions, and worked examples, see
+[annotation type resolution](annotation-type-resolution.md).
+For the constraints prepared from those results, see [annotation order preservation](annotation-order-preservation.md).
 The groups belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates declaration order
 in the shared AST and returns `sortedAnnotationSrcFragmentsByGroupSrcStart`: only changed groups map from their
 original start offsets to existing fragments in sorted order. Public `SortingResult` also retains the supplied context

@@ -39,6 +39,7 @@ SPDX-License-Identifier: Apache-2.0
   interface fields.
 - Use concise, factual technical language in documentation, comments, changelog entries, and commit messages. Omit
   conversational narration, decorative wording, repetition, and unnecessary detail.
+- Use English for all repository documentation, source comments, and text in fixtures and configuration files.
 - Prefer "source file" over "compilation unit" in high-level descriptions. Retain Spoon terminology when describing
   specific APIs or model identity; distinguish the source file from its parsed Spoon model.
 - When creating or substantially revising an algorithm guide, put its main flow diagram first and explain the protected

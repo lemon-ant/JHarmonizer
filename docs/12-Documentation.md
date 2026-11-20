@@ -42,6 +42,7 @@ JHarmonizer/
     ├── 11-Tests.md
     ├── 12-Documentation.md            (this file)
     ├── PROJECT-WHITE-PAPER.md
+    ├── annotation-order-preservation.md
     ├── annotation-type-resolution.md
     ├── benchmark.md
     ├── config-dsl.md
@@ -73,7 +74,8 @@ JHarmonizer/
    [`09-Maven-plugin.md`](09-Maven-plugin.md).
 7. Algorithm deep-dive: [`sorting-algorythm.md`](sorting-algorythm.md),
    [`declaration-order-dependencies.md`](declaration-order-dependencies.md),
-   [`annotation-type-resolution.md`](annotation-type-resolution.md) (in Russian).
+   [`annotation-type-resolution.md`](annotation-type-resolution.md), and
+   [`annotation-order-preservation.md`](annotation-order-preservation.md).
 8. Limitations: [`known-limitations.md`](known-limitations.md),
    [`known-unhandled-patterns.md`](known-unhandled-patterns.md).
 9. Operational topics: [`directives.md`](directives.md), [`benchmark.md`](benchmark.md),

@@ -119,6 +119,9 @@ To preserve an affected type's annotation order, use a
 `// @jharmonizer:sort-off` [directive](directives.md) for that type, or disable annotation ordering with
 `annotations-ordering: []`.
 
+See [annotation order preservation](annotation-order-preservation.md) for how the sorter derives and applies these
+constraints.
+
 ## `header-line`
 
 | Key            | Type      | Description                                                                |

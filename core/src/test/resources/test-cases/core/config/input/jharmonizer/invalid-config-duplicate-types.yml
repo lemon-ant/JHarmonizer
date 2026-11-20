@@ -21,7 +21,7 @@ type-members-ordering:
   - name: BadGroup
     includes:
       - [ method ]
-      - [ method ]  # дубликат
+      - [ method ]  # duplicate
     ordering-rules: [ alpha ]
     separator: none
     groups: [ ]

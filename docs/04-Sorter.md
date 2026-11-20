@@ -47,6 +47,8 @@ place; declaration JavaDoc and file preambles retain their positions. Scanner-pr
 terminators and move blank lines with attached comment blocks while removing redundant blank lines from the original
 position. Complete ties retain source order. See
 [`annotations-ordering`](config-dsl.md#annotations-ordering) for criteria, defaults, and comment attachment rules.
+See [annotation order preservation](annotation-order-preservation.md) for the dependency keys that constrain those
+criteria and examples of their effect on the final order.
 
 ## Input / output
 
