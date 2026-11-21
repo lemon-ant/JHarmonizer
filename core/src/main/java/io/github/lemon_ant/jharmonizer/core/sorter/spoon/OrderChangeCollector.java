@@ -20,7 +20,6 @@ class OrderChangeCollector {
 
     /**
      * Collects a final permutation and reports whether it differs from its input order.
-     * @param elementCount number of elements in the permutation
      * @param elementsBeforeOrdering iterator over the input order
      * @param orderedElements sequential stream producing the final permutation
      * @param <TElement> element type
@@ -28,14 +27,12 @@ class OrderChangeCollector {
      */
     @NonNull
     static <TElement> ElementOrdering<TElement> collectOrderedElements(
-            int elementCount,
             @NonNull Iterator<TElement> elementsBeforeOrdering,
             @NonNull Stream<TElement> orderedElements) {
-        List<TElement> elementsInSortedOrder = new ArrayList<>(elementCount);
-        ElementOrderAccumulator<TElement> accumulator =
-                new ElementOrderAccumulator<>(elementsBeforeOrdering, elementsInSortedOrder);
+        ElementOrderAccumulator<TElement> accumulator = new ElementOrderAccumulator<>(elementsBeforeOrdering);
         orderedElements.forEachOrdered(accumulator::append);
-        return new ElementOrdering<>(Collections.unmodifiableList(elementsInSortedOrder), accumulator.reordered);
+        return new ElementOrdering<>(
+                Collections.unmodifiableList(accumulator.elementsInSortedOrder), accumulator.reordered);
     }
 
     /** Final element order and its change flag. */
@@ -50,15 +47,13 @@ class OrderChangeCollector {
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    // TODO Simplify this constructor to pass only elementsBeforeOrdering collection and create elementsInSortedOrder
-    //   internally taking elementsBeforeOrdering.size as a parameter for the second collection
     private static final class ElementOrderAccumulator<TElement> {
 
         @NonNull
         private final Iterator<TElement> elementsBeforeOrdering;
 
         @NonNull
-        private final List<TElement> elementsInSortedOrder;
+        private final List<TElement> elementsInSortedOrder = new ArrayList<>();
 
         private boolean reordered;
 

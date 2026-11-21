@@ -104,7 +104,6 @@ class SpoonAnnotationSorter {
             return new ElementOrdering<>(originalAnnotationSrcFragments, false);
         }
         return OrderChangeCollector.collectOrderedElements(
-                originalAnnotationSrcFragments.size(),
                 originalAnnotationSrcFragments.iterator(),
                 orderAnnotationSrcFragments(originalAnnotationSrcFragments, annotationComparator).stream());
     }

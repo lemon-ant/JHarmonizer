@@ -137,7 +137,6 @@ public class SpoonSorter {
                 createTopLevelTypesComparator(compiledTopLevelTypesOrdering, mainType, orderingComparator);
 
         ElementOrdering<CtType<?>> declaredTypeOrdering = OrderChangeCollector.collectOrderedElements(
-                declaredTypes.size(),
                 declaredTypes.iterator(),
                 declaredTypes.stream().sorted(declaredTypeComparator));
         compilationUnit.setDeclaredTypes(declaredTypeOrdering.getElementsInSortedOrder());
@@ -165,7 +164,6 @@ public class SpoonSorter {
 
         GroupBoundaryMarker.markGroupBoundaries(orderedMemberGroupBlocks);
         return OrderChangeCollector.collectOrderedElements(
-                typeMember2Descriptor.size(),
                 streamExplicitSrcTypeMembers(type).iterator(),
                 orderedMemberGroupBlocks.stream()
                         .flatMap(memberGroupBlock -> memberGroupBlock.getTypeMembers().stream()));
