@@ -3,6 +3,8 @@
 package io.github.lemon_ant.jharmonizer.core.flow;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.readClasspathResourceAsString;
+import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.requireClasspathResourceUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
@@ -12,6 +14,7 @@ import io.github.lemon_ant.jharmonizer.core.formatter.Formatter;
 import io.github.lemon_ant.jharmonizer.core.sorter.Sorter;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,8 +22,15 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ReorderFlowIntegrationTest {
+
+    @NonNull
+    private static final URL INVALID_REPEATABLE_CONTAINER = requireClasspathResourceUrl(
+            "/test-cases/core/source-processor/flow-level/invalid/InvalidRepeatableContainer.java");
 
     @TempDir
     Path temporaryDirectory;
@@ -70,6 +80,42 @@ class ReorderFlowIntegrationTest {
     }
 
     @Test
+    void processStream_invalidRepeatableContainer_returnsErrorAndPreservesFileWithoutBackup() throws IOException {
+        // Given
+        String originalSrcCode = readClasspathResourceAsString(INVALID_REPEATABLE_CONTAINER);
+        Path srcPath = writeJavaFile("InvalidRepeatableContainer.java", originalSrcCode);
+        byte[] originalSrcBytes = Files.readAllBytes(srcPath);
+        SrcFile srcFile = createSrcFile(originalSrcCode, srcPath);
+        ReorderFlow reorderFlow = createFlow(true);
+
+        // When
+        FileProcessingResult fileProcessingResult =
+                reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+
+        // Then
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.ERROR);
+        assertThat(Files.readAllBytes(srcPath)).containsExactly(originalSrcBytes);
+        assertThat(srcPath.resolveSibling(srcPath.getFileName() + ".bak")).doesNotExist();
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideOrderingStatuses")
+    void processStream_orderingAndFormattingChanges_reportsMatchingStatus(
+            @NonNull String srcCode, @NonNull FileProcessingStatus expectedStatus) throws IOException {
+        // Given
+        Path javaFilePath = writeJavaFile("OrderingStatus.java", srcCode);
+        SrcFile srcFile = createSrcFile(srcCode, javaFilePath);
+        ReorderFlow reorderFlow = createFlow(false);
+
+        // When
+        FileProcessingResult result =
+                reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
+
+        // Then
+        assertThat(result.getFileProcessingStatus()).isEqualTo(expectedStatus);
+    }
+
+    @Test
     void processStream_unformattedFileWithBackupsEnabled_rewritesFileAndCreatesBackup() throws IOException {
         // Given
         String unformattedSrcCode = "class C { void b() {} void a() {} }";
@@ -82,9 +128,7 @@ class ReorderFlowIntegrationTest {
                 reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus())
-                .isNotEqualTo(FileProcessingStatus.UNCHANGED)
-                .isNotEqualTo(FileProcessingStatus.SKIPPED);
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
         Path backupFilePath = javaFilePath.resolveSibling("C.java.bak");
         assertThat(backupFilePath).exists();
         assertThat(Files.readString(backupFilePath, StandardCharsets.UTF_8)).isEqualTo(unformattedSrcCode);
@@ -103,12 +147,22 @@ class ReorderFlowIntegrationTest {
                 reorderFlow.processStream(Stream.of(srcFile)).findFirst().orElseThrow();
 
         // Then
-        assertThat(fileProcessingResult.getFileProcessingStatus())
-                .isNotEqualTo(FileProcessingStatus.UNCHANGED)
-                .isNotEqualTo(FileProcessingStatus.SKIPPED);
+        assertThat(fileProcessingResult.getFileProcessingStatus()).isEqualTo(FileProcessingStatus.REORDERED);
         assertThat(Files.readString(javaFilePath, StandardCharsets.UTF_8)).isNotEqualTo(unformattedSrcCode);
         Path backupFilePath = javaFilePath.resolveSibling("B.java.bak");
         assertThat(backupFilePath).doesNotExist();
+    }
+
+    @NonNull
+    private static Stream<Arguments> provideOrderingStatuses() {
+        return Stream.of(
+                Arguments.of(
+                        "@SuppressWarnings(\"all\") @Deprecated class OrderingStatus {}",
+                        FileProcessingStatus.REORDERED),
+                Arguments.of("class OrderingStatus {}", FileProcessingStatus.FORMATTED),
+                Arguments.of(
+                        "// @jharmonizer:sort-off\nclass OrderingStatus { void z() {} void a() {} }",
+                        FileProcessingStatus.FORMATTED));
     }
 
     @NonNull

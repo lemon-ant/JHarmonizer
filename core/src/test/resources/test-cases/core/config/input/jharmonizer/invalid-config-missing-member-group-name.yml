@@ -11,6 +11,7 @@ formatting:
   blank-line-after-type-header: false
   blank-line-before-comment: true
   blank-line-between-fields: false
+annotations-ordering: []
 backups-enabled: true
 processing-statistics-mode: FULL
 header-line:

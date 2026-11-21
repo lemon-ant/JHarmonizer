@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamExplicitSrcTypeMembers;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;

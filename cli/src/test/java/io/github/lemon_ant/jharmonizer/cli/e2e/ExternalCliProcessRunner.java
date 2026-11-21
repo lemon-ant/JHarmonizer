@@ -55,7 +55,7 @@ class ExternalCliProcessRunner {
             }
             int exitCode = completed ? process.exitValue() : -1;
             return new ExternalCliProcessResult(
-                    List.copyOf(command),
+                    command,
                     exitCode,
                     normalizeErrorOutput(getOutput(stderrFuture)),
                     getOutput(stdoutFuture),

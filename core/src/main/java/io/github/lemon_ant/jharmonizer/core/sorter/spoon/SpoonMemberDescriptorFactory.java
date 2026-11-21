@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.sorter.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.sorter.spoon.SpoonTypeMemberUtils.streamExplicitSrcTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.streamExplicitSrcTypeMembers;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.DeclarationModifier;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberAccess;

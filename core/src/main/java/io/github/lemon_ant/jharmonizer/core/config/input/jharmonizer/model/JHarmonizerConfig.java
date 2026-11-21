@@ -10,13 +10,13 @@ import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
-/**
- * Root deserialization model for a JHarmonizer YAML configuration file.
- * Holds formatting settings, backup flag, header-line descriptor,
- * member-group ordering definitions, and top-level type ordering.
- */
+/** Complete settings read from a JHarmonizer YAML configuration. */
 @Value
 public class JHarmonizerConfig {
+
+    @NonNull
+    List<JHarmonizerAnnotationOrderingRule> annotationOrderingRules;
+
     boolean backupsEnabled;
 
     @NonNull
@@ -34,9 +34,9 @@ public class JHarmonizerConfig {
     @NonNull
     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
 
-    // TODO Make it package
     /**
-     * Creates a new JHarmonizerConfig.
+     * Creates a complete configuration with read-only views of supplied collections.
+     * @param annotationOrderingRules annotation criteria in priority order, retained as a read-only view
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
@@ -45,6 +45,8 @@ public class JHarmonizerConfig {
      * @param memberGroups the member groups
      */
     public JHarmonizerConfig(
+            @NonNull @JsonProperty(value = "annotations-ordering", required = true)
+                    List<@NonNull JHarmonizerAnnotationOrderingRule> annotationOrderingRules,
             @NonNull @JsonProperty(value = "top-level-types-ordering", required = true)
                     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull @JsonProperty(value = "formatting", required = true) JHarmonizerFormatting formatting,
@@ -54,6 +56,7 @@ public class JHarmonizerConfig {
             @NonNull @JsonProperty(value = "header-line", required = true) JHarmonizerHeaderLine headerLine,
             @NonNull @JsonProperty(value = "type-members-ordering", required = true)
                     List<@NonNull JHarmonizerMemberGroup> memberGroups) {
+        this.annotationOrderingRules = Collections.unmodifiableList(annotationOrderingRules);
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;
         this.backupsEnabled = backupsEnabled;

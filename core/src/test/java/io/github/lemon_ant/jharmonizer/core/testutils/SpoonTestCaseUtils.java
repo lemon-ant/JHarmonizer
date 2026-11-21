@@ -7,9 +7,11 @@ import static java.util.Objects.requireNonNull;
 
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberKind;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSourceScanner;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -18,20 +20,48 @@ import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.Launcher;
+import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.factory.Factory;
+import spoon.reflect.factory.FactoryImpl;
+import spoon.support.DefaultCoreFactory;
+import spoon.support.StandardEnvironment;
+import spoon.support.compiler.VirtualFile;
 
 @UtilityClass
 public class SpoonTestCaseUtils {
-    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(true, true, false);
-
     public static SpoonAstModel parseAstModelFromJavaFixtureResource(URL javaFixtureResource) {
         requireNonNull(javaFixtureResource, "javaFixtureResource cannot be null");
 
         String srcCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
         return SpoonParser.parseJavaSrcFile(
-                createSrcFile(srcCode, Path.of(extractFileNameWithExtension(javaFixtureResource))),
-                DEFAULT_PRINTER_CONFIG);
+                createSrcFile(srcCode, Path.of(extractFileNameWithExtension(javaFixtureResource))));
+    }
+
+    /**
+     * Parses the original Spoon model with production parser settings before annotation scanning.
+     * @param javaFixtureResource Java fixture resource to parse without modifying its AST
+     * @return original Spoon compilation unit of the fixture
+     */
+    @NonNull
+    public static CtCompilationUnit parseCompilationUnitFromJavaFixtureResource(@NonNull URL javaFixtureResource) {
+        String srcCode = TestCaseResourceUtils.readClasspathResourceAsString(javaFixtureResource);
+        String fixtureFileName = extractFileNameWithExtension(javaFixtureResource);
+        Launcher launcher;
+        try {
+            // The full parser runs annotation scanning before direct-resolver assertions can inspect the model.
+            // Reuse its launcher factory to keep parser settings identical without invoking the scanner.
+            Method launcherFactory = SpoonParser.class.getDeclaredMethod("createPreconfiguredParserLauncher");
+            launcherFactory.setAccessible(true);
+            launcher = (Launcher) launcherFactory.invoke(null);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Cannot reuse the Spoon parser launcher factory", exception);
+        }
+        launcher.addInputResource(new VirtualFile(srcCode, fixtureFileName));
+        launcher.buildModel();
+        return launcher.getFactory().CompilationUnit().getOrCreate(fixtureFileName);
     }
 
     public static CtType<?> parseMainTypeFromJavaFixtureResource(URL javaFixtureResource) {
@@ -100,6 +130,17 @@ public class SpoonTestCaseUtils {
         }
 
         return matchingDescriptors.getFirst();
+    }
+
+    /**
+     * Scans source fragments with an empty Spoon type context without parsing partial or invalid input into an AST.
+     * @param srcCode source text to scan, including partial Java snippets
+     * @return immutable annotation groups in source order
+     */
+    @NonNull
+    public static List<AnnotationSrcGroup> scanAnnotationSrcGroups(@NonNull String srcCode) {
+        Factory factory = new FactoryImpl(new DefaultCoreFactory(), new StandardEnvironment());
+        return AnnotationSourceScanner.scan(srcCode, factory.Core().createCompilationUnit());
     }
 
     /**

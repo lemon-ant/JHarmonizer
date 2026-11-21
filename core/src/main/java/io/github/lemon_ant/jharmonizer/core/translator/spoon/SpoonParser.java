@@ -6,10 +6,8 @@ import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOutResolver;
 import io.github.lemon_ant.jharmonizer.core.optout.JHarmonizerOptOuts;
 import io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils;
-import io.github.lemon_ant.jharmonizer.core.translator.SerializedSrcWithSkippedTypeRanges;
 import io.github.lemon_ant.jharmonizer.core.translator.SpoonModelBuildException;
-import java.util.Map;
-import java.util.function.Supplier;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSourceScanner;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import spoon.Launcher;
@@ -22,25 +20,24 @@ public class SpoonParser {
     private static final int JAVA_VERSION = 21;
 
     /**
-     * Parses the java source resource.
+     * Parses a Java source file and scans its annotation groups from the original text.
      * @param srcFile the original source file
-     * @param printerConfig the printer configuration for the serialization supplier
-     * @return the java source resource
+     * @return parsed source context with the shared AST
      */
     @NonNull
-    public static SpoonAstModel parseJavaSrcFile(@NonNull SrcFile srcFile, @NonNull PrinterConfig printerConfig) {
+    public static SpoonAstModel parseJavaSrcFile(@NonNull SrcFile srcFile) {
         VirtualFile virtualFile =
                 new VirtualFile(srcFile.getSrcCode(), srcFile.getPath().toString());
 
         Launcher launcher = createPreconfiguredParserLauncher();
         launcher.addInputResource(virtualFile);
 
-        return buildSpoonAstModel(srcFile, launcher, printerConfig);
+        return buildSpoonAstModel(srcFile, launcher);
     }
 
     @NonNull
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher, PrinterConfig printerConfig) {
+    private static SpoonAstModel buildSpoonAstModel(SrcFile srcFile, Launcher launcher) {
         try {
             launcher.buildModel();
         } catch (RuntimeException exception) {
@@ -53,19 +50,15 @@ public class SpoonParser {
         CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
-        Supplier<SerializedSrcWithSkippedTypeRanges> serializedSrcCode = () -> {
-            if (SpoonTypeUtils.hasNoDeclaredTypes(compilationUnit)) {
-                return new SerializedSrcWithSkippedTypeRanges(srcFile.getSrcCode(), Map.of());
-            }
-
-            return SpoonSrcPrinter.serializeCompilationUnit(
-                    compilationUnit, srcFile.getSrcCode(), optOuts.getSortingSkippedTypes(), printerConfig);
-        };
+        // TODO What does it mean?
+        // Spoon can return null for virtual source text. Scan the supplied text using the original AST.
         return SpoonAstModel.builder()
-                .originalMemberOrder(RelocationDetector.snapshotOriginalMemberOrder(compilationUnit))
+                .originalAnnotationSrcGroups(AnnotationSourceScanner.scan(srcFile.getSrcCode(), compilationUnit))
+                .originalMemberOrder(SpoonTypeTreeUtils.streamDeclaredHierarchy(compilationUnit)
+                        .toList())
                 .compilationUnit(compilationUnit)
                 .mainType(mainType)
-                .serializedSrcCode(serializedSrcCode)
+                .srcCode(srcFile.getSrcCode())
                 .optOuts(optOuts)
                 .path(srcFile.getPath())
                 .build();

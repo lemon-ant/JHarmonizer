@@ -16,7 +16,7 @@ JHarmonizer-produced file restores correct behaviour.
 
 `ITEM_REGISTRY` is a mutable `HashMap` that is pre-declared but populated by a
 `static {}` block. `REGISTRY_SNAPSHOT` captures the contents of `ITEM_REGISTRY`
-at class-load time via `List.copyOf(ITEM_REGISTRY.values())`.
+at class-load time via `Collections.unmodifiableList(ITEM_REGISTRY.values())`.
 
 The correct static-initialization order is:
 
@@ -55,7 +55,7 @@ initializer block and the snapshot field is a **non-static** field.
 
 An instance init block `{ ITEM_REGISTRY.put(...); }` mutates the `static`
 mutable field `ITEM_REGISTRY`. A later **instance** field `registrySnapshot`
-captures a snapshot via `List.copyOf(ITEM_REGISTRY.values())`.
+captures a snapshot via `Collections.unmodifiableList(ITEM_REGISTRY.values())`.
 
 An earlier version of `InitializerBlockMutableFieldReadDependencyProvider`
 filtered candidate provider blocks by the *field's* staticness (`fieldIsStatic`).

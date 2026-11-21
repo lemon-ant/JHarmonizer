@@ -8,6 +8,7 @@ import static java.lang.System.lineSeparator;
 
 import io.github.lemon_ant.jharmonizer.core.diff.DiffReporter;
 import io.github.lemon_ant.jharmonizer.core.diff.WhitespaceVisualizationStyle;
+import io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocation;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;

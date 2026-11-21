@@ -29,14 +29,49 @@ SPDX-License-Identifier: Apache-2.0
 
 - Prefer the smallest complete change that solves the reviewed problem.
 - Keep changes surgical and avoid unrelated cleanup.
+- JHarmonizer is consumed as one application; internal module APIs may change freely. Update affected callers in the
+  same change instead of adding or retaining overloads or forwarding methods solely for backward compatibility.
+  Preserve contracts exposed to application users unless changing them is part of the requested task.
+- For mandatory processing steps with one implementation, keep implementation choice inside the owning processor and
+  accept the required input and context. Do not expose strategy callbacks solely for test substitutions or hypothetical
+  alternatives.
+  Keep stateful mandatory helpers as concrete processing objects instead of closures stored in generic functional
+  interface fields.
 - Use concise, factual technical language in documentation, comments, changelog entries, and commit messages. Omit
   conversational narration, decorative wording, repetition, and unnecessary detail.
+- Describe current behavior in algorithm guides and source comments. Keep examples and explanations for non-obvious
+  behavior, and remove implementation history and completed review checklists from those descriptions.
+- Use English for all repository documentation, source comments, and text in fixtures and configuration files.
+- Prefer "source file" over "compilation unit" in high-level descriptions. Retain Spoon terminology when describing
+  specific APIs or model identity; distinguish the source file from its parsed Spoon model.
+- When creating or substantially revising an algorithm guide, put its main flow diagram first and explain the protected
+  behavior with observable examples before implementation details. Distinguish sorting criteria from dependency
+  constraints when both are involved.
+- Name algorithm stages after their complete operation; describe intermediate selection steps in the details.
+  Overview diagrams may use concise scope labels when the accompanying text explains the complete operation.
+  Define name components in algorithm guides and distinguish lookup outcomes from returned values. Explain framework
+  limitations with concrete parsed-source examples; identify artificial test conditions separately from observed
+  parser behavior.
+  State the returned name form explicitly: distinguish simple, written, fully qualified, and canonical type names.
+  Algorithm examples must exercise the control-flow transitions they describe; account for early returns when
+  explaining traversal between scopes or stages.
+  In annotation lookup descriptions, distinguish enclosing types, the initial lookup type, and the current lookup type.
+  Reserve "scope" for actual Java name visibility instead of using it as a synonym for these types.
+- Describe Spoon source positions as ranges or offsets reported by Spoon. Distinguish reported positions from actual
+  source boundaries and source-text rewrites.
+- Source-derived metadata must be read from compilable Java and Spoon's unmodified parsed AST.
+  Throw an exception when an observed source/model shape violates that contract and fail processing for that file.
+  Do not recover through defaults or alternate AST representations for malformed input or caller-modified models.
+  Unavailable external declarations in no-classpath mode do not by themselves violate this contract.
 - Wrap Markdown prose at 120 characters without changing wording or document structure.
   - Preserve tables, code blocks, diagrams, stack traces, and indivisible links when wrapping would change their content
     or Markdown interpretation.
 - Create Git commits only when the user explicitly requests a commit for the current task. Authorization from a
   completed task does not carry over to a new task; otherwise leave changes uncommitted.
-- Record every dependency addition or update, functional change, and new feature in `CHANGELOG.md` in the same task.
+- Record user-visible features, fixes, compatibility changes, and significant performance changes in `CHANGELOG.md`
+  in the same task. Write for users and developers integrating JHarmonizer into builds. Include dependency updates
+  affecting compatibility, source processing, or security. Group related changes and omit implementation refactors,
+  internal API changes, test additions, and quality-gate details.
 - Licensing policy is mandatory for all tracked files.
   - Every tracked text/source/config/documentation file must include SPDX metadata.
   - Required SPDX lines:
@@ -48,6 +83,115 @@ SPDX-License-Identifier: Apache-2.0
 - Avoid cosmetic-only churn in production files (for example adding/removing separator blank lines) when there is no
   behavioral or readability gain tied to the task.
 - Reuse existing project and library utilities before introducing custom helpers.
+- Keep generic raw source-offset and whitespace operations in `SrcCodeUtils`. Place Java lexical helpers according to
+  their actual consumers; independence from Spoon does not require a global utilities package. Retain token-cursor
+  state and annotation-specific parsing in the scanner.
+- Use half-open `[start, endExclusive)` ranges in `SrcCodeUtils`; convert Spoon's inclusive end offsets at integration
+  boundaries.
+- Keep parser-stage type-tree traversal, source type nesting, and enclosing-type selection in
+  `translator.spoon.SpoonTypeTreeUtils`. Keep annotation-only type-name formatting, prefix matching at segment
+  boundaries, and annotation-kind validation in the package-private `translator.spoon.annotation.SpoonTypeNameUtils`.
+  Keep only cross-stage main-type selection, effective member boundaries, and explicit source-member traversal in
+  `core.spoon.SpoonTypeUtils`.
+  Format nesting through recorded type-reference owner links, independently of declaration availability.
+  Preserve literal `$` characters in Java identifiers instead of replacing every `$` with a dot.
+  Keep inherited member-type lookup and its result model in `SpoonTypeInheritanceUtils`.
+  Keep complete annotation type-name resolution, stage precedence, single imports, and final fallback-name selection
+  in `AnnotationTypeNameResolver`. Delegate lookup through nested and inherited declarations and source AST-binding
+  confirmation (stages 1, 2, and 4) to `AnnotationTypeNameFromDeclarationsResolver`.
+  Share `CanonicalAnnotationTypeNameLookupResult` as an independent result model.
+  Keep repeatable-container metadata and order-preservation key resolution in `AnnotationDependencyKeyResolver`.
+  Distinguish type nesting from inheritance in helper names and documentation.
+- Keep Spoon import-name extraction, import-shape checks, and inherited member-type lookup within
+  `translator.spoon.annotation`, in `SpoonImportUtils` and `SpoonTypeInheritanceUtils` respectively.
+  Type-name extractors must exclude resolved field/method references and unresolved static members. Preserve their
+  simple names as lookup blockers: a field/method reference may omit a same-name inherited type imported by that
+  declaration. A definite type import takes precedence; other matching static-member names are lookup uncertainty,
+  not canonical type-name evidence.
+  Prepare scope-independent import names, classifications, and wildcard owners once per source file in a
+  `SpoonTypeImportContext` shared by these annotation processors. Retain all real wildcard imports in model order
+  and index all available source owners by the original import's identity. Check imports in that order and stop when
+  an owner is unavailable; keep per-name owner searches and selected annotation-kind validation in the lookup stages.
+  Pass the prepared import context to consumers instead of unpacking its collections at call sites.
+  Consumers that need only part of it must extract and retain the required fields in their constructors.
+  Retain a computed predicate when a consumer needs that fact but not the underlying collection.
+  Derive import-presence predicates from existing collections instead of storing duplicate flags. After matching
+  single imports have been handled, unrelated single imports do not block the module's implicit `java.lang` fallback.
+  Reject wildcard imports before contextual lookup, including uses with no AST reference.
+  Do not assume Spoon's import iteration order matches source-text order; tests must use the original parsed model.
+- In annotation lookup/index names, distinguish annotation type declarations (`@interface Tag`) from uses (`@Tag`).
+  When an index stores `CtTypeReference` values for uses, name the stored references explicitly.
+  Name general Java type-lookup helpers and results without an annotation-specific prefix. Include `Annotation` in
+  helper names when their contract is specific to annotation uses.
+  Have `CanonicalAnnotationTypeNameLookupResult` source constructors accept `CtType<?>`, require
+  `CtAnnotationType<?>` internally, and derive names from the validated declarations. Keep import-based construction
+  separate, validate available declarations, and avoid raw-name constructors that bypass these lookup checks.
+  Keep `AnnotationTypeNameResolution` a simple immutable DTO with its generated package-private name/confirmation
+  constructor and two convenience constructors: a name defaults to unconfirmed; a successful canonical lookup result
+  supplies its non-null name with confirmation. Reject a nameless lookup result. Keep name selection and confirmation
+  decisions in `AnnotationTypeNameResolver`; do not put declaration lookup, qualification inference, or Spoon-context
+  validation in the result DTO.
+  Before caching annotation identities or reading repeatable metadata, require known final source declarations to be
+  annotation types. Fail on a known wrong-kind declaration; do not constrain intermediate owners or require unavailable
+  external declarations.
+- In no-classpath annotation lookup, inspect lexical declarations and unavailable inherited scopes before trusting an
+  AST reference to a source-declared type. Cache scope-independent facts without moving scope-dependent decisions.
+  Include local and anonymous classes in the enclosing-type scope index. Keep that index separate from canonical
+  declaration indexes. Annotation interfaces cannot be declared directly or indirectly inside local or anonymous
+  classes (JLS 9.6), so legal source annotation declarations remain covered by the top-level/member metadata index.
+  Follow inherited intermediate owners and check their own parent chains before resolving the next inherited segment.
+  Search inheritance by the requested member name and stop each branch at a declaration that hides its ancestors;
+  do not reject a resolved member solely because a hidden ancestor is unavailable.
+  In the final fallback-name selection for ordinary source files, retain written qualification independently of
+  external annotation-use AST names. Such references can miss unseen same-package types. Confirm canonical names
+  from declaration/import evidence or an actual runtime-JDK annotation found for a module descriptor after excluding
+  matching single imports and wildcard imports.
+  Carry that confirmation with each resolved name; matching a fallback spelling to a canonical-name index must not
+  authorize source metadata lookup or promote the use to a confirmed identity.
+  `AnnotationTypeNameResolver` always returns a named `AnnotationTypeNameResolution` with canonical-name
+  confirmation. Select fallback names inside this resolver; blocked lookup or insufficient context
+  retains the unconfirmed original written name. Terminal `UNRESOLVED` must still stop subsequent lookup stages.
+  Use the `?.` namespace for every unconfirmed dependency key, including fallback uses and unresolved `@Repeatable`
+  container roots. Keep unprefixed names in lookup result models; encode confidence when constructing dependency keys.
+  Cache only confirmed canonical annotation type names as keys, mapping them to final dependency keys. Unconfirmed
+  terminal containers are values only, and per-use fallback keys remain outside the cache. Determine metadata-name
+  confidence from source declarations and exact single-type imports before eager traversal; do not keep a parallel
+  confirmed-name set. Match aliases against current input keys and both sides of source repeatable relationships.
+  Keep root-key cache access in a `computeIfAbsent` wrapper around a cache-independent computation method. The
+  computation must neither access the cache nor call its wrapper; validate declarations and detect cycles locally.
+  During source-family preparation, index confirmed terminal identities only after their computation returns.
+  Collectors may read the prepared relationship index.
+  Prepare source repeatable relationships before collecting group aliases, including repeated annotation types with no
+  earlier confirmed use. This discovery preserves defaulted-container order and cannot be replaced by caching only
+  observed confirmed uses.
+  Keep written-name retention and bounded qualification enrichment in one final stage. After excluding wildcard
+  imports, handle module descriptors before the ordinary-file qualified-name guard. Look up the first segment as a
+  public top-level `java.lang` type before interpreting an explicit `java.lang.` prefix; follow public declared and
+  inherited member types and require the selected final type to be an annotation. Missing or ambiguous paths retain
+  the unconfirmed spelling. Use the actual runtime JDK, independently of annotation-use AST presence, and derive the
+  canonical name from the selected type rather than concatenating a presumed package prefix.
+  Keep the module-context decision and its source/import preconditions in the resolver. Cache public top-level
+  `java.lang` types once in `RuntimeTypeUtils`; inspect runtime types without initialization or loading application
+  dependencies, and do not read their repeatable metadata for ordering.
+  In ordinary files, enrich a simple name only when the AST reference's package matches the current package.
+  Such package agreement does not confirm canonical identity: a missing external declaration can leave Spoon with
+  a wrong same-package name for an inherited annotation. A type reference does not prove a declaration in this file.
+  Named and unnamed ordinary packages both allow unseen same-package homonyms that can hide `java.lang` types.
+  Runtime-JDK lookup reflects the running JDK's API, not another project target's API. Keep ordinary-file shadowing
+  protection even when runtime lookup finds a matching platform type.
+- Report annotation ordering diffs with the existing formatting-violation message and diff renderer.
+- Preserve relative source order for repeated annotation type identities, including visible occurrences nested in
+  explicit containers. Resolve identities across written qualifications; confirmed distinct types sharing a simple name
+  remain independently sortable. Different qualified spellings alone do not prove distinct nested types: inherited
+  owner aliases can denote the same annotation. When a pair sharing a simple name cannot be distinguished, including
+  unresolved short names and wildcard/static imports, conservatively preserve its relative order. Retain original
+  type/container keys and add each occurrence's alternative group keys once. Do not expand alternatives transitively
+  or merge confirmed distinct homonyms into one dependency family.
+  Continue sorting independent annotations in the same source group without warnings.
+  Use repeatable metadata from declarations in the current source file as additional dependency evidence, including
+  defaulted containers; unavailable external metadata must not disable annotation sorting.
+  Document the limitation for defaulted containers without a source-declared repeatable relationship, and the available
+  sorting opt-out. A local container declaration alone does not establish that relationship.
 - Prefer explicit Java types over `var`.
 - Prefer normal imports over repeated fully qualified class names.
 - Prefer Lombok for routine boilerplate such as getters, setters, constructors, and `toString` / `equals` / `hashCode`
@@ -56,6 +200,14 @@ SPDX-License-Identifier: Apache-2.0
   mutability is required.
 - When a simple data-carrier class only needs a narrower constructor than Lombok's default, keep `@Value` and add the
   constructor visibility override instead of decomposing `@Value` into separate Lombok annotations.
+- For data carriers with more than five constructor parameters, use a named Lombok builder and keep the generated
+  constructor private, for example with `@AllArgsConstructor(access = AccessLevel.PRIVATE)`.
+- For data carriers with five or fewer constructor parameters, use Lombok's generated constructor and keep positional
+  calls aligned with declaration order. Remove builders unless features such as `toBuilder` are required.
+  Do not add `staticConstructor` factories that only forward these constructor arguments.
+- After field renaming or sorting, update positional constructor calls instead of moving fields back or adding explicit
+  constructors to preserve the old argument order. Retain explicit constructors only when needed for validation,
+  collection write protection or immutable snapshots, deserialization, or inherited-state initialization.
 - When an annotation argument only repeats the library or framework default behavior, omit it instead of spelling it out
   explicitly.
 - Use the minimal necessary access level for production classes, constructors, and methods.
@@ -63,20 +215,112 @@ SPDX-License-Identifier: Apache-2.0
   - Prefer `private` for nested classes, constructors, and helpers when they are only used by the enclosing type.
   - For nested helper/data-carrier types created only by the enclosing type, keep their constructors `private`; tests
     are not a reason to widen constructor visibility.
+  - Apply the same visibility review to Lombok-generated getters. Keep derived views used only inside a model private;
+    test their effects through the production-facing contract.
 - Keep production models and value objects focused on state plus simple accessors or validation.
   - Move non-trivial business, filtering, parsing, and transformation logic into dedicated service or processing
     classes.
+  - Models and value objects must not call the processors that create or consume them, including static helpers.
+    Move shared value derivation and validation into neutral utilities or independent services.
+  - Prefer named predicates when a numeric model value encodes a domain condition. Derive them from existing state
+    when possible instead of storing a redundant flag.
+- For models exposing several views of the same data, accept the representation naturally produced by callers and
+  derive the other views internally, eagerly or lazily. Simple partitioning or interleaving belongs in the model when
+  it enforces consistency. Do not expose independent builder inputs for these dependent views.
+- Keep scanner/parser result models limited to data consumed by downstream production code; retain temporary parsing
+  state in local variables or private implementation state.
+- Keep processing-wide printer settings in the flow and pass them explicitly to serialization. Parsers and source
+  models must not retain printer configuration.
+- Keep sorted annotation orders out of `SpoonAstModel`. Sorting processors return sorting data and metadata;
+  they must not depend on printers or construct printing inputs. Both `SpoonSorter.SpoonSortingResult` and public
+  `SortingResult` retain `sortedSpoonAstModel`, the supplied context after in-place AST sorting, beside the separate
+  sorted-order map. The facade forwards the nested result's model; subsequent stages read the public result.
+  Flows assemble `SpoonPrintingInput` immediately before serialization, retaining only source groups, working AST,
+  source text/path, skipped types, and selected annotation orders.
+  Do not copy the parsed model to attach sorting output. The returned model and printing context share mutable Spoon
+  nodes rather than providing AST snapshots.
+- Return requested member-relocation diagnostics plus independent `annotationsReordered` and `membersReordered` flags
+  from sorting in `SortingResult`. `membersReordered` covers Spoon declaration order, including top-level types;
+  `annotationsReordered` covers source annotation fragments and is derived from the sparse sorted-order map rather
+  than stored separately. Derive `isReordered()` as their OR without storing another flag. Flows use this aggregate for
+  status and sorting checks instead of recomputing changes from the AST.
+- Sort each freshly parsed shared AST only once per flow. Claim its shared `CtCompilationUnit` before the first sorting
+  attempt, including unchanged and failed attempts; model views and clones of consumed units must not reset the claim.
+  Detect final-order changes while collecting sorted output, after grouping and dependency repair, instead of traversing
+  the completed AST again. Compute detailed member diagnostics only when declarations changed and the caller needs the
+  report.
+- Preserve annotation source-group order during sorting; only annotation order inside each group may change.
+  Keep parsed groups and gaps unchanged. Store only changed orders in
+  `sortedAnnotationSrcFragmentsByGroupSrcStart` returned by sorting results, mapping each original group start to
+  existing annotation fragments in sorted order. The flow passes this same map to the printing input. Missing entries
+  retain source order; derive the annotation-change flag from map non-emptiness instead of comparing groups again.
+- When one timing statistic covers consecutive operations, measure them in a single `StopWatch.measure` call instead of
+  summing separate measurements.
+- Keep annotation source models in the standalone `AnnotationSrcGroup` class beside the scanner in
+  `translator.spoon.annotation`, with nested annotation, gap, and private base-fragment types.
+  Keep group/gap/layout constructors and the annotation-fragment builder package-private; keep the fragment's full
+  constructor private. Keep gap types and their list getter package-private; sorting consumes only annotation fragments.
+  Construct source models once in the scanner; do not expose gap/group copying APIs.
+- Keep annotation ordering keys and semantic constraint metadata in `AnnotationDescriptor`. Annotation fragments retain
+  the descriptor plus source ranges and text; gap fragments retain prepared content and whitespace values.
+  Ordering algorithms remain in the sorter.
+- Measure annotation declaration length in UTF-16 code units from original token spellings, including Unicode escapes.
+  Sum measured token and internal-comment lengths; exclude inter-token whitespace and outside comments, retain
+  text-block indentation normalization, and use translated names for identities.
+- Capture annotation and gap fragments with their source ranges and comment/separator ownership during scanning.
+  Prepare fixed gap content and moved-gap layouts for separator requirements zero, one, and two in the scanner.
+  Each layout records whether to prepend the selected annotation's prepared separators and which leading whitespace
+  to use. Preserve exact separator strings, including mixed line endings. Gaps retain their original code and ranges.
+  Select the prepared layout for the final annotation/destination-gap pair during rendering; separator emission is
+  not a per-annotation constant. Keep preparation linear instead of materializing all possible pairings.
+  Sorting determines only annotation order; it must not prepare gap text, reconstruct source models, or analyze source.
+  Group construction retains unmodifiable views of both source-order lists and requires one gap per annotation.
+  Producers must not modify handed-off lists; the scanner starts fresh lists for each group. Each group lazily
+  interleaves and caches its original mixed sequence and original replacement code.
+  `AnnotationSrcGroupRenderer` joins the selected order with prepared gap layouts, using the original gap verbatim
+  for its original annotation. It must not read source text or decide comment ownership. `SrcPrinterOutput` delegates
+  this joining and owns source-range copying and group replacement for all source files.
 - Explicitly annotate field and non-private method nullability with `@NonNull` / `@Nullable` where applicable; private
   method parameters may stay implicit when the intent is already obvious.
 - Prefer Stream API when it makes the control flow clearer and more concise than imperative loops.
+- Prefer `Objects.equals` for nullable value comparisons instead of explicit null-check branches.
+  Enforce required non-null values separately so two absent values cannot satisfy a presence requirement.
+- When a mutable stream result is needed, collect directly into the required collection instead of copying an
+  intermediate collection.
+- Keep `Optional` search results as `Optional` when checking presence; do not convert them to `null` solely for that
+  check.
+- Prefer `Optional.ofNullable(...).map(...).orElse(...)` for nullable lookup, transformation, and fallback chains when
+  this removes intermediate null checks and improves readability.
+- Prefer a non-null `Optional<T>` over nullable returns for package-level lookup APIs with an expected absent result.
 - If a boolean helper is always consumed through negation at its call sites, invert the helper logic and rename it so
   callers stay positive and direct.
 - Prefer `get` only for conventional object-model/DTO getters; for computed values, searches, conditional lookups, or
   transformations, prefer a more specific verb such as `find`, `resolve`, `collect`, `compute`, or `merge`.
 - For non-get behavior methods, start the method name with a clear verb.
-  - Prefer explicit verb-led names such as `find`, `resolve`, `collect`, `compute`, `merge`, `parse`, `format`, or
-    `render`.
+  - Prefer explicit verb-led names such as `find`, `resolve`, `infer`, `collect`, `compute`, `merge`, `parse`,
+    `format`, or `render`.
   - Avoid ambiguous prefixes such as `toXxx` when a clearer verb-based name fits the method behavior.
+  - For helpers that extract or resolve a value, name that operation and its result; document validation separately.
+  - Prefer `infer*` for constructing names from contextual rules without looking up declarations; reserve `find*`
+    for actual searches.
+  - Prefer `find*` for utility searches, `extract*`, `read*`, or `format*` for inspecting existing representations,
+    and `compute*` for derived values. Reserve `resolve*` for decisions in domain logic, such as establishing bindings
+    or identities; accepting context alone does not make a utility search a resolution step. Keep the caller's
+    interpretation, such as a lookup candidate, out of extraction utility names.
+  - Name private validation helpers with `validate*` and return `void` when they only check supplied values.
+- For new or substantially revised methods, put the broadest context first, then the owner or target, followed by names,
+  selection criteria, and options. Preserve framework override signatures and Lombok DTO constructor declaration order.
+- Keep each helper within the responsibility expressed by its name. Sequence sibling processing stages in their caller;
+  each stage may delegate its own substeps. Avoid extraction that adds result or state handling without improving
+  readability. Split processing classes by coherent responsibilities, document the boundary, and pass required context
+  explicitly.
+  Name coordinators after their overall result and subordinate processors after their operation or lookup mechanism.
+  Make member-type lookup names distinguish direct declarations from superclass/superinterface hierarchy traversal.
+- Do not retain state-holder classes or distort control flow solely to satisfy method-count checks.
+  Reuse suitable utilities or split them by coherent responsibility before suppressing `PMD.TooManyMethods`.
+  A narrowly scoped suppression is allowed for a cohesive utility class without a sensible split; document the reason.
+  Keep complexity checks enabled and reduce complexity through helpers instead of raising thresholds or suppressing
+  them.
 - Reference-returning private methods must declare explicit `@NonNull` or `@Nullable` return annotations.
   - Private method parameters must not use Lombok `@NonNull`; it adds redundant runtime null checks for private helpers.
   - Use `@Nullable` on a private parameter only when that private helper intentionally accepts `null`; otherwise leave
@@ -103,14 +347,60 @@ SPDX-License-Identifier: Apache-2.0
   appropriate.
 - Java fixtures under `src/test/resources/test-cases/**` may still use records when a scenario explicitly tests record
   handling.
-- If a utility is shared across processing phases, place it in a neutral package instead of under a phase-specific
-  package.
+- Organize production classes by their owning processing stage. Keep source parsing and printing in `translator`,
+  ordering in `sorter`, and formatting in `formatter`.
+  Group the source annotation scanner and its name, repeatable-container, and dependency-key preparation helpers in
+  `translator.spoon.annotation`; they prepare the model before sorting. Keep their internal helpers package-private.
+  Reserve neutral packages such as `core.spoon` and `core.utilities` for helpers with actual production consumers
+  in different processing stages. Review both whole classes and individual methods against their actual consumers;
+  generic names and possible future reuse do not justify a neutral API. Keep helpers consumed within one stage as close
+  as possible to their owning processors, even when shared by several processors or independent of Spoon.
+  Models may stay beside their producers to restrict initial construction with package-private access, even when read
+  by several stages. Cross-stage consumption alone does not require placing a model in a neutral package.
+  As an explicit exception, keep `RelocationDetector` and its package-private `LongestIncreasingSubsequenceUtils`
+  beside the shared `MemberRelocation` model in `core.spoon`, so the model constructor remains package-private.
+  `Sorter` is the detector's only production caller; this co-location preserves construction access rather than
+  indicating cross-stage use of the detector.
+  Shared utilities must not depend on stage-specific processors or helpers. Extract genuinely shared operations into
+  the neutral package and update callers instead of adding forwarding wrappers.
 - Wrap collections once when returning or handing off a collection that was built mutably in the current method,
   including private/package-private helpers, so the receiver cannot mutate the handed-off instance.
-- Do not add a second unmodifiable wrapper or defensive copy when the collection already stays immutable upstream or
-  never leaves the local method scope.
+  When handing collections to a model, enforce this protection in the model constructor instead of requiring callers
+  to pre-wrap them.
+- Do not add a second unmodifiable wrapper or defensive copy when an input already has the required read-only ownership
+  contract, or when a collection remains local. Passing a local collection to a helper that only reads it and does not
+  retain it is not an ownership handoff.
+- Immutable models accepting caller-owned collections must retain an immutable snapshot, not a read-only view of mutable
+  input. Reuse immutable instances where supported, for example through `List.copyOf`.
+  - Exception: annotation ordering criteria in strict and flexible YAML/unified configurations use unmodifiable views
+    without defensive copies. Callers must not mutate supplied lists after construction; do not add tests that assume
+    snapshot isolation for these criteria.
+  - Exception: annotation source groups retain unmodifiable views without copying. Callers must not mutate the supplied
+    lists after handoff; the scanner uses fresh lists for subsequent groups.
+  - Exception: sorting results and `SpoonPrintingInput` retain sorted annotation-order maps and fragment lists already
+    made read-only by their producers. The printing input also retains existing read-only source/opt-out views.
+    Producers must not modify handed-off collections; do not wrap or copy them again.
+    When SpotBugs cannot infer this verified read-only handoff, suppress only `EI_EXPOSE_REP2` on the relevant constructor
+    with a justification naming the producer's protection.
+  - Exception: annotation dependency-key sets, resolver identity indexes, and prepared import contexts use unmodifiable
+    views without defensive copies. Producers must not modify handed-off collections. Reuse already unmodifiable
+    inputs when contents do not change; allocate new collections for transformed contents.
+  - Exception: member-relocation diagnostics in `SortingResult` and `MemberRelocation` use unmodifiable views without
+    defensive copies. Producers must not mutate handed-off lists. Test returned-list write protection and processing
+    behavior; do not simulate caller mutations forbidden by this ownership contract.
+- Reject null entries in YAML configuration collections during deserialization. Configure the YAML mapper centrally;
+  custom collection deserializers must enforce the same rule. Preserve nullable optional properties.
+- When a mutable buffer is reused or cleared after handoff, retain an immutable snapshot; an unmodifiable view still
+  reflects subsequent buffer mutations.
 - Non-obvious build/configuration workarounds must include a nearby comment that explains why the workaround exists,
   which upstream component requires it, and when it can be removed.
+- Document non-obvious regular expressions next to the pattern, including matching rules and examples that match or
+  fail.
+- Explain non-obvious parser/model branches with nearby examples of the input or AST shape and the resulting behavior.
+- For stateful token parsers, document the expected current token on entry and exit, including cursor movement when no
+  result is returned.
+- For parser errors about the current token, read its offset from the cursor at the failure site instead of passing
+  diagnostic-only offsets through parsing methods.
 - When a piece of code intentionally keeps a non-obvious, previously reverted, or easy-to-"simplify" behavior because of
   an external constraint, leave a nearby comment that explains why it exists, what constraint it preserves, and why it
   should not be changed casually.
@@ -121,7 +411,23 @@ SPDX-License-Identifier: Apache-2.0
   family.
 - Lambda parameters are also variables and must follow the same naming rule — use clear, descriptive names; never use
   single-character abbreviations such as `m`, `s`, `e`, or `t` for lambda parameters.
+- Make a variable's domain role explicit when its type is generic, for example `annotationOwner` or
+  `annotationComparator`. Name maps by both values and key meaning, such as `annotationDescriptorsBySrcStartOffset`.
+  For nested collections, document each level's element meaning and the scope of one call; distinguish per-item data
+  from collections covering a whole source file.
+- Name annotation criterion lists `annotationOrderingRules` across strict and flexible input/unified models.
+  The YAML property remains `annotations-ordering`.
+- When collection ordering matters to its use, reflect that order in the variable name.
+- Prefer `Set` over `List` for collections of unique values whose iteration order is irrelevant to their consumers.
+- When an index must cover every requested key, reject missing entries with a diagnostic exception instead of
+  substituting empty/default values. Validate this invariant once before dependent lookups where practical.
+- Distinguish immutable source-order group views from separately stored annotation orders selected by sorting.
+  Reserve sorted-order names for sequences already sorted by the comparator; rendering joins these views explicitly.
+- Name helper and data-carrier types after the entities they represent, for example `AnnotationSrcFragment`, so their
+  purpose remains clear at import and usage sites outside the enclosing class.
 - Build and validate with JDK 21.
+- Preserve the root `.mvn` directory: shared quality-gate paths use `maven.multiModuleProjectDirectory`. Validate
+  changes to shared build-resource paths from both the repository root and the affected module directory.
 - Automatically run tests only for the module being changed; for changes spanning modules, limit test runs to those
   modules.
   - If prerequisite modules need to be built, skip their tests unless they are also being changed.
@@ -197,6 +503,9 @@ SPDX-License-Identifier: Apache-2.0
 - Keep the condition minimal but specific.
 - Prefer `<ProductionClassName>Test` for unit tests.
 - Prefer `<FeatureOrScenarioName>Test` for integration tests that cover a pipeline.
+- Make test class names and main Java fixture type/file names describe the tested behavior without relying on package or
+  scenario-directory names.
+- Use distinct main fixture names for different scenarios; keep each `input/` and `expected/` pair aligned.
 - If you need multiple scenarios, prefer `@Nested` classes instead of splitting into many test classes.
 
 ### Structure

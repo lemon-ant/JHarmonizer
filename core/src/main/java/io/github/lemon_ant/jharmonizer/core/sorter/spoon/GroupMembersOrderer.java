@@ -113,7 +113,7 @@ class GroupMembersOrderer {
             }
         }
 
-        return edges.isEmpty() ? Dependencies.empty() : new Dependencies<>(List.copyOf(edges));
+        return edges.isEmpty() ? Dependencies.empty() : new Dependencies<>(edges);
     }
 
     @NonNull

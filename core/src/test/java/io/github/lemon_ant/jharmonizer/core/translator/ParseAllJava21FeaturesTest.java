@@ -12,7 +12,9 @@ import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.PrinterConfig;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonAstModel;
 import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonParser;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonPrintingInput;
 import java.nio.file.Path;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ParseAllJava21FeaturesTest {
@@ -30,7 +32,7 @@ class ParseAllJava21FeaturesTest {
         SrcFile srcFile = createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH);
 
         // When
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         ParsingStatistic parsingStatistic = parsingResult.getParsingStatistic();
 
         // Then
@@ -52,11 +54,11 @@ class ParseAllJava21FeaturesTest {
     void serialize_validSpoonASTModelWithAllJava21Features_returnExpectedSrcCode() {
         // Given
         SpoonAstModel spoonASTModel = SpoonParser.parseJavaSrcFile(
-                createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH),
-                DEFAULT_PRINTER_CONFIG);
+                createSrcFile(SAMPLE_ALL_JAVA21_SOURCE_CODE, SAMPLE_ALL_JAVA21_PSEUDO_SOURCE_PATH));
+        SpoonPrintingInput printingInput = new SpoonPrintingInput(spoonASTModel, Map.of());
 
         // When
-        SerializationResult serializationResult = SrcAstTranslator.serialize(spoonASTModel);
+        SerializationResult serializationResult = SrcAstTranslator.serialize(printingInput, DEFAULT_PRINTER_CONFIG);
 
         // Then
         assertThat(serializationResult).isNotNull();

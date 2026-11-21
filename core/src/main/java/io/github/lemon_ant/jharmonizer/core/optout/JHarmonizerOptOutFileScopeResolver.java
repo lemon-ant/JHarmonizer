@@ -28,8 +28,8 @@ final class JHarmonizerOptOutFileScopeResolver {
     /**
      * Resolves file-scope opt-out mode with AST-first logic and raw-source fallback.
      *
-     * @param srcFile source file associated with the parsed compilation unit
-     * @param compilationUnit parsed compilation unit
+     * @param srcFile source file associated with the parsed Spoon model
+     * @param compilationUnit Spoon model of the source file
      * @return resolved file-scope opt-out mode, or {@code null} when no directive is present
      */
     @Nullable

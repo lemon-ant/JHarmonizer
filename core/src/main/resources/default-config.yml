@@ -10,6 +10,8 @@ formatting:
 backups-enabled: true
 processing-statistics-mode: MINIMAL
 
+annotations-ordering: [ declaration-length-asc, name-length-asc, alpha, arguments-alpha ]
+
 header-line:
   character: '-'
   left-padding: 3

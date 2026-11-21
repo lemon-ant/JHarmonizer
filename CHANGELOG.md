@@ -12,35 +12,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## 1.1.0 - unreleased
+
+### Added
+
+- Configurable annotation sorting through [`annotations-ordering`](docs/config-dsl.md#annotations-ordering), including
+  annotations on packages, modules, declarations, parameters, record components, and type uses.
+- Checks detect annotation-only ordering violations and report source diffs.
 
 ### Changed
 
-- Replaced the inherited Spoon source printer with standalone source-fragment printing, a direct output buffer, and
-  indexed member boundaries. Preserved declaration output and skipped-type ranges; removed enum correction through Spoon
-  pretty printing.
-- On the four-workload JDK 21 corpus, mean printer serialization throughput reached 1.40–5.07× baseline across 1/2/4/8
-  workers; sampled p50/p95/p99 decreased for every workload. Allocated bytes per batch decreased by 6.7–66.2% across the
-  measured cases.
-- Selected printer code decreased from 1000 to 701 physical lines and from 276 to 210 NCSS; summed Cyclo decreased from
-  106 to 81, Cognitive from 87 to 59, and external library target types from 21 to 11.
-- The source printer now copies the original tail after the last top-level type following one blank line. Preserves
-  comment spelling, indentation, semicolons, trailing whitespace and the original file ending; removes separate footer
-  rendering.
-- Updated Palantir Java Formatter dependency from 2.91.0 to 2.98.0.
-- Updated Spoon dependency from 11.2.1 to 11.5.0.
+- Annotation sorting is enabled by default: declaration length, name length, alphabetical name, then argument text.
+  Use `annotations-ordering: []` to preserve source order; file and type sorting opt-outs also apply.
+- Faster source printing with reduced memory allocation.
+- Updated Java parsing and formatting engines: Spoon 11.5.0 and Palantir Java Formatter 2.100.0.
 
 ### Fixed
 
-- Preserved footer comments after the last top-level type with trailing line terminators, virtual sources, and repeated
-  processing, including reordered top-level declarations.
-- Fixed duplicate blank lines in Spoon serialization before closing braces, between nested and top-level types, and at
-  end of file. Declaration containers now own separators, combining header, member, and group spacing while preserving
-  comments, opt-out fragments, and source line endings. Member source boundaries are indexed once, skipped-type offsets
-  no longer copy the output buffer, and fragment indentation is retained without rescanning leading whitespace.
-  Fragment-boundary detection is centralized in `SrcCodeUtils` with unit coverage for indentation, whitespace, and
-  source ranges.
-- Generated member-group comments now retain the following member's source indentation before formatting.
+- Preserved relative order for repeatable annotations across qualified names and explicit containers.
+  [Library containers with hidden defaults](docs/config-dsl.md#annotations-ordering) may still require
+  a sorting opt-out.
+- Preserved annotations, attached comments, JavaDoc, file footers, and line endings during reordering; fixed extra blank
+  lines and comment indentation.
+- Null entries in YAML configuration collections now produce a configuration error.
+- TRACE logging no longer creates intermediate Java files under `debug/` or fails processing while writing them.
 
 ## [1.0.1] — 2026-05-07
 

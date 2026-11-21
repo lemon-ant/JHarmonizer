@@ -92,6 +92,7 @@ hot path needs:
   predicate evaluation per rule;
 - the member-group tree is laid out in DFS post-order with stable indexes so
   first-match-wins lookups are O(depth) per member;
+- annotation criteria are chained into one reusable comparator over precomputed annotation keys;
 - the formatter style, header line, and other scalar settings are pinned into
   immutable fields, so no string parsing happens per file.
 

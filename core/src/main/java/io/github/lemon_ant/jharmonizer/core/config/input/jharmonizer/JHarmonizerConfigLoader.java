@@ -4,6 +4,8 @@ package io.github.lemon_ant.jharmonizer.core.config.input.jharmonizer;
 
 import static java.util.Objects.requireNonNull;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -28,7 +30,9 @@ public class JHarmonizerConfigLoader {
     private static final String DEFAULT_CONFIG_RESOURCE_PATH = "/default-config.yml";
     private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+            .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+            // Reject null collection entries; null optional properties still mean no override.
+            .setDefaultSetterInfo(JsonSetter.Value.forContentNulls(Nulls.FAIL));
 
     /**
      * Loads the default.

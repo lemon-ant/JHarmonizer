@@ -3,7 +3,7 @@
 // @jharmonizer:fully-off
 // @jharmonizer:sort-off
 /**
- * Package-level documentation fixture for non-type compilation-unit coverage.
+ * Package-level documentation fixture for source files without type declarations.
  *
  * <p>Keeps legal package annotations so the formatter and parser still have syntax to preserve.
  */

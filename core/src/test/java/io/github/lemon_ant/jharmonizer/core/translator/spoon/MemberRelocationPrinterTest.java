@@ -3,13 +3,13 @@
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
 import static io.github.lemon_ant.jharmonizer.core.files_handler.SrcFileCreator.createSrcFile;
+import static io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocationTestCreator.createMemberRelocation;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.lemon_ant.jharmonizer.core.config.ConfigurationManager;
-import io.github.lemon_ant.jharmonizer.core.config.compiled.CompiledConfig;
 import io.github.lemon_ant.jharmonizer.core.diff.DiffReporter;
 import io.github.lemon_ant.jharmonizer.core.diff.WhitespaceVisualizationStyle;
 import io.github.lemon_ant.jharmonizer.core.files_handler.SrcFile;
+import io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingResult;
 import io.github.lemon_ant.jharmonizer.core.translator.SrcAstTranslator;
 import java.nio.file.Path;
@@ -22,11 +22,6 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
 class MemberRelocationPrinterTest {
-    private static final CompiledConfig DEFAULT_CONFIG = ConfigurationManager.loadDefaultConfig();
-    private static final PrinterConfig DEFAULT_PRINTER_CONFIG = new PrinterConfig(
-            DEFAULT_CONFIG.getFormatting().isBlankLineAfterTypeHeader(),
-            DEFAULT_CONFIG.getFormatting().isBlankLineBeforeComment(),
-            DEFAULT_CONFIG.getFormatting().isBlankLineBetweenFields());
     private static final WhitespaceVisualizationStyle STYLE = DiffReporter.resolveStyle();
 
     @Test
@@ -40,7 +35,7 @@ class MemberRelocationPrinterTest {
                         + "    public void d() {}\n"
                         + "}\n",
                 Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         CtType<?> sampleType =
                 spoonAstModel.getCompilationUnit().getDeclaredTypes().get(0);
@@ -49,7 +44,7 @@ class MemberRelocationPrinterTest {
         CtMethod<?> methodC = requireMethodByName(sampleType, "c");
         CtMethod<?> methodD = requireMethodByName(sampleType, "d");
         List<MemberRelocation> relocation =
-                List.of(new MemberRelocation(List.of(methodA, methodB, methodC, methodD), null, null));
+                List.of(createMemberRelocation(List.of(methodA, methodB, methodC, methodD), null, null));
 
         // When
         String output = MemberRelocationPrinter.printRelocations(Path.of("Sample.java"), relocation);
@@ -67,7 +62,7 @@ class MemberRelocationPrinterTest {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         List<CtTypeMember> methods = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                 .flatMap(ctType -> ctType.getMethods().stream())
@@ -75,12 +70,12 @@ class MemberRelocationPrinterTest {
                 .toList();
         CtTypeMember firstMethod = methods.get(0);
         List<MemberRelocation> relocationsExceedingLimit = List.of(
-                new MemberRelocation(List.of(firstMethod), null, null),
-                new MemberRelocation(List.of(firstMethod), null, null),
-                new MemberRelocation(List.of(firstMethod), null, null),
-                new MemberRelocation(List.of(firstMethod), null, null),
-                new MemberRelocation(List.of(firstMethod), null, null),
-                new MemberRelocation(List.of(firstMethod), null, null));
+                createMemberRelocation(List.of(firstMethod), null, null),
+                createMemberRelocation(List.of(firstMethod), null, null),
+                createMemberRelocation(List.of(firstMethod), null, null),
+                createMemberRelocation(List.of(firstMethod), null, null),
+                createMemberRelocation(List.of(firstMethod), null, null),
+                createMemberRelocation(List.of(firstMethod), null, null));
 
         // When
         String output = MemberRelocationPrinter.printRelocations(Path.of("Sample.java"), relocationsExceedingLimit);
@@ -106,7 +101,7 @@ class MemberRelocationPrinterTest {
         // Given
         SrcFile srcFile = createSrcFile(
                 "public class Sample {\n    public void a() {}\n\n    public void b() {}\n}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         List<MemberRelocation> fakeRelocations = buildMethodRelocationsWithFakeNeighbors(spoonAstModel);
 
@@ -125,13 +120,13 @@ class MemberRelocationPrinterTest {
     void printRelocations_withTopLevelTypeRelocation_showsFileRootAsTypeName() {
         // Given
         SrcFile srcFile = createSrcFile("class Alpha {}\nclass Beta {}\n", Path.of("Sample.java"));
-        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile, DEFAULT_PRINTER_CONFIG);
+        ParsingResult parsingResult = SrcAstTranslator.parse(srcFile);
         SpoonAstModel spoonAstModel = parsingResult.getSpoonAstModel();
         List<CtTypeMember> topLevelTypes = spoonAstModel.getCompilationUnit().getDeclaredTypes().stream()
                 .map(CtTypeMember.class::cast)
                 .toList();
         List<MemberRelocation> relocations =
-                List.of(new MemberRelocation(List.of(topLevelTypes.get(0)), null, topLevelTypes.get(1)));
+                List.of(createMemberRelocation(List.of(topLevelTypes.get(0)), null, topLevelTypes.get(1)));
 
         // When
         String output = MemberRelocationPrinter.printRelocations(Path.of("Sample.java"), relocations);
@@ -149,10 +144,10 @@ class MemberRelocationPrinterTest {
                 .toList();
         if (methods.size() < 2) {
             return methods.stream()
-                    .map(method -> new MemberRelocation(List.of(method), null, null))
+                    .map(method -> createMemberRelocation(List.of(method), null, null))
                     .toList();
         }
-        return List.of(new MemberRelocation(List.of(methods.get(0)), null, methods.get(1)));
+        return List.of(createMemberRelocation(List.of(methods.get(0)), null, methods.get(1)));
     }
 
     @NonNull

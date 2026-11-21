@@ -25,7 +25,7 @@ The constructor compiles the active config via
 - `Formatter(formatter-style, fix-imports)` — Palantir wrapper.
 - `Sorter(compiledConfig)` — member sorter.
 - `PrinterConfig(blank-line-after-type-header, blank-line-before-comment, blank-line-between-fields)` — passed to the
-  Spoon custom printer.
+  flow and supplied explicitly to the Spoon custom printer during serialization.
 
 ## Public API
 
@@ -71,14 +71,21 @@ The CLI / Maven plugin layer maps `success` to the documented exit codes.
 For each source file (driven by the parallel `Stream<SrcFile>` returned by
 `SrcFilesHandler.readJavaFiles(...)`, i.e. already-loaded source wrappers), the active flow runs:
 
-1. **Parse** — `SpoonParser.parseJavaSrcFile(srcFile, printerConfig)` →
+1. **Parse** — `SpoonParser.parseJavaSrcFile(srcFile)` →
    `SpoonAstModel` (also resolves opt-out directives).
-2. **Opt-out short-circuit** — if the file is `@jharmonizer:fully-off`, the original
-   text is reused verbatim and the flow records `SKIPPED_BY_OPT_OUT`.
-3. **Sort** — `Sorter.sort(...)` reorders members per `CompiledConfig`.
-4. **Serialize** — `SpoonSrcPrinter` assembles source fragments in the reordered AST's declaration order.
+2. **Opt-out short-circuit** — file-level `fully-off` and `sorting-off` reuse the original text without sorting or
+   printing, so no printing input is constructed. The result retains the unchanged supplied model and empty orders.
+   `fully-off` records `SKIPPED_BY_OPT_OUT`; `sorting-off` still permits formatting.
+3. **Sort** — `Sorter.sort(...)` reorders members per `CompiledConfig` and returns the supplied model after sorting,
+   selected annotation orders, requested member-relocation diagnostics, and independent `annotationsReordered` and
+   `membersReordered` flags. Flows use their computed OR, `isReordered()`, for sorting violations and status; the
+   annotation flag selects source diffs.
+4. **Serialize** — the flow builds `SpoonPrintingInput` from the model and annotation orders in `SortingResult`.
+   `SrcAstTranslator.serialize(printingInput, printerConfig)` passes this context and flow settings to
+   `SpoonSrcPrinter`, which assembles source fragments in the working AST's declaration order and selected annotation
+   order.
 5. **Format** — `Formatter.formatSrc(...)` runs the Palantir pass and (optionally)
-   import fixing, skipping ranges marked `@jharmonizer:fully-off`.
+   import fixing, skipping ranges marked `@jharmonizer:fully-off` using opt-outs from the returned model.
 6. **Diff** — `DiffReporter` compares original and rewritten text when needed by the flow.
 7. **Write / report** — `REORDER` writes the new text to disk (with optional `.bak`
    backup); the `CHECK_*` flows only record the violation.

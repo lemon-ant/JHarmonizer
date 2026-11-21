@@ -2,16 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSrcWithRelease21;
 import static io.github.lemon_ant.jharmonizer.core.e2e.JavaRunMainTestUtils.runJavaMainMethod;
+import static io.github.lemon_ant.jharmonizer.core.testutils.JavaCompileTestUtils.compileJavaSourcesWithRelease21;
 import static io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils.TEST_CASES_DIR;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.core.testutils.JavaCompileTestUtils;
 import io.github.lemon_ant.jharmonizer.core.testutils.TestCaseResourceUtils;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
 import lombok.Value;
@@ -78,7 +80,7 @@ class SrcProcessorRegressionTest
         log.info("E2E compile attempt started: srcFile={}, outputDir={}", srcFile, compileOutputDirectory);
         JavaCompileTestUtils.CompileResult compileResult;
         try {
-            compileResult = compileJavaSrcWithRelease21(srcFile, compileOutputDirectory);
+            compileResult = compileJavaSourcesWithRelease21(List.of(srcFile), compileOutputDirectory);
         } catch (IOException | InterruptedException exception) {
             log.warn("E2E compile attempt failed with exception: srcFile={}", srcFile, exception);
             return CompileAndRunSnapshot.compileFailed();

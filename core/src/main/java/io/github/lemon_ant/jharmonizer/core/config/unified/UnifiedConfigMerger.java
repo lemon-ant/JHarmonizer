@@ -51,6 +51,8 @@ public class UnifiedConfigMerger {
                 .orElse(baseline.getRootMemberGroups().orElse(null));
 
         FlexibleUnifiedConfig.FlexibleUnifiedConfigBuilder builder = FlexibleUnifiedConfig.builder()
+                .annotationOrderingRules(overlay.getAnnotationOrderingRules()
+                        .orElse(baseline.getAnnotationOrderingRules().orElse(null)))
                 .topLevelTypesOrdering(top)
                 .formatting(formatting)
                 .backupsEnabled(backupsEnabled)
@@ -82,8 +84,11 @@ public class UnifiedConfigMerger {
         List<UnifiedMemberGroup> root = overlay.getRootMemberGroups()
                 .map(overlayRootGroups -> mergeRootMemberGroups(baseline.getRootMemberGroups(), overlayRootGroups))
                 .orElse(baseline.getRootMemberGroups());
+        List<UnifiedAnnotationOrderingRule> annotationOrderingRules =
+                overlay.getAnnotationOrderingRules().orElse(baseline.getAnnotationOrderingRules());
 
         return UnifiedConfig.builder()
+                .annotationOrderingRules(annotationOrderingRules)
                 .topLevelTypesOrdering(top)
                 .formatting(formatting)
                 .headerLine(header)

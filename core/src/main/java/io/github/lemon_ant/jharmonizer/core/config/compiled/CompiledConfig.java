@@ -4,10 +4,12 @@ package io.github.lemon_ant.jharmonizer.core.config.compiled;
 
 import static java.util.Collections.unmodifiableList;
 
+import io.github.lemon_ant.jharmonizer.core.config.unified.AnnotationDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.MemberDescriptor;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedFormatting;
 import io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedHeaderLine;
 import io.github.lemon_ant.jharmonizer.core.processing_stat.ProcessingStatisticsMode;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import lombok.AccessLevel;
@@ -21,6 +23,10 @@ import lombok.Value;
  */
 @Value
 public class CompiledConfig {
+
+    @NonNull
+    Comparator<AnnotationDescriptor> annotationComparator;
+
     boolean backupsEnabled;
 
     /**
@@ -50,6 +56,7 @@ public class CompiledConfig {
 
     /**
      * Creates a new CompiledConfig.
+     * @param annotationComparator compiled annotation ordering
      * @param rootMemberGroups the root member groups
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
@@ -59,12 +66,14 @@ public class CompiledConfig {
      */
     @Builder(access = AccessLevel.PACKAGE)
     private CompiledConfig(
+            @NonNull Comparator<AnnotationDescriptor> annotationComparator,
             @NonNull List<CompiledMemberGroup> rootMemberGroups,
             @NonNull CompiledTopLevelTypesOrdering topLevelTypesOrdering,
             @NonNull UnifiedFormatting formatting,
             boolean backupsEnabled,
             @NonNull ProcessingStatisticsMode processingStatisticsMode,
             @NonNull UnifiedHeaderLine headerLine) {
+        this.annotationComparator = annotationComparator;
         this.rootMemberGroups = unmodifiableList(rootMemberGroups);
         this.topLevelTypesOrdering = topLevelTypesOrdering;
         this.formatting = formatting;

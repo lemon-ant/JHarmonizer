@@ -2,10 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import spoon.reflect.code.CtComment;
+import spoon.reflect.code.CtComment.CommentType;
+import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
@@ -49,6 +55,59 @@ class SpoonTypeMemberUtils {
     }
 
     /**
+     * Finds comments adjacent to the first type that Spoon left outside its source range.
+     * @param compilationUnit Spoon model of the source file containing the original comments
+     * @param typeStart first type's original source start
+     * @param srcCode original source text
+     * @return start of the type's leading comments, excluding a separate file header
+     */
+    static int findLeadingTypeCommentStart(
+            @NonNull CtCompilationUnit compilationUnit, int typeStart, @NonNull String srcCode) {
+        List<CtComment> commentsBeforeTypeInReverseSrcOrder = compilationUnit.getComments().stream()
+                .filter(comment -> comment.getPosition().isValidPosition())
+                .filter(comment -> comment.getPosition().getSourceEnd() < typeStart)
+                .sorted(Comparator.comparingInt(
+                                (CtComment comment) -> comment.getPosition().getSourceStart())
+                        .reversed())
+                .toList();
+        int firstCommentStart = typeStart;
+        int firstJavaDocStart = typeStart;
+        for (CtComment comment : commentsBeforeTypeInReverseSrcOrder) {
+            SourcePosition commentPosition = comment.getPosition();
+            // TODO(UNICODE_COMMENT_GAPS): Recognize translated whitespace while preserving original source offsets.
+            // Java string notation: "/** B docs */\\u000aclass B {}\nclass A {}" must keep the JavaDoc with B.
+            // The raw gap fails here, leaving B's docs before A when A moves first. Also cover a gap of
+            // "\\u0020" or "\n\\u0020": escaped spaces and indentation must not detach the comment either.
+            if (!CommentGapPatterns.ADJACENT_COMMENT_GAP
+                    .matcher(srcCode)
+                    .region(commentPosition.getSourceEnd() + 1, firstCommentStart)
+                    .matches()) {
+                break;
+            }
+            firstCommentStart = commentPosition.getSourceStart();
+            if (comment.getCommentType() == CommentType.JAVADOC) {
+                firstJavaDocStart = firstCommentStart;
+            }
+        }
+        // TODO check that examples and description is valid
+        // Without a package/import, Spoon can attach type comments to the source-file model (CtCompilationUnit).
+        // The loop collected one adjacent block of any length, with no blank line or source text between its
+        // comments and the first type. If only whitespace precedes this block, treat it as reaching the file start.
+        // Split such a block at the earliest JavaDoc in source order: earlier comments belong to the file;
+        // the JavaDoc and all following comments in the block belong to the type.
+        // Without JavaDoc, firstJavaDocStart remains typeStart, so the whole block belongs to the file.
+        // If any non-whitespace content precedes the block (e.g. a separate license header), the entire adjacent
+        // block belongs to the type, starting at firstCommentStart.
+        // The caller keeps text before the returned offset at the file top; comments from that offset move with the
+        // type.
+        // Examples (\n denotes a line break):
+        // "// license\nclass A {}" -> typeStart: the license stays at the top of the file.
+        // "// license\n/** A docs */\n// details\nclass A {}" -> firstJavaDocStart: JavaDoc and details move with A.
+        // "// license\n\n// A docs\nclass A {}" -> firstCommentStart: the adjacent comment moves with A.
+        return srcCode.substring(0, firstCommentStart).isBlank() ? firstJavaDocStart : firstCommentStart;
+    }
+
+    /**
      * Detects leading comments, excluding misplaced trailing comments and enclosing-type JavaDoc.
      * @param member the member to inspect
      * @param memberDeclarationEndLines the set of last source lines of declarations in the same type
@@ -82,5 +141,32 @@ class SpoonTypeMemberUtils {
                         < member.getPosition().getLine())
                 .map(comment -> comment.getContent().trim())
                 .anyMatch(groupHeader::equals);
+    }
+
+    /** Whitespace rules for associating leading comments with a type. */
+    @UtilityClass
+    private static final class CommentGapPatterns {
+
+        // TODO Check that it's right
+        /**
+         * Matches the entire gap between a comment and the following comment or type declaration.
+         * Allows spaces, tabs ({@code \t}), and form feeds ({@code \f}) around zero or one line separator:
+         * LF ({@code \n}), CR ({@code \r}), or CRLF ({@code \r\n}). Two separators form a blank line,
+         * separating an earlier comment block from the type. Any other character also breaks adjacency.
+         *
+         * <p>Examples use Java string notation:
+         * <pre>{@code
+         * ""           -> matches: no gap
+         * " \t\f"      -> matches: spaces, tabs, and form feeds
+         * "\n    "     -> matches: LF followed by indentation
+         * " \r\t"      -> matches: one CR with surrounding whitespace
+         * " \r\n\t"    -> matches: CRLF counts as one separator
+         * "\n\n"       -> does not match: a blank line
+         * "\r\n \r\n"  -> does not match: a blank line containing a space
+         * " class "    -> does not match: source text in the gap
+         * }</pre>
+         */
+        @NonNull
+        private static final Pattern ADJACENT_COMMENT_GAP = Pattern.compile("[ \\t\\f]*(?:\\r\\n|\\r|\\n)?[ \\t\\f]*");
     }
 }

@@ -16,34 +16,27 @@ JHarmonizer uses **[Spoon](https://github.com/INRIA/spoon)** as its single AST l
 The implementation lives in
 `io.github.lemon_ant.jharmonizer.core.translator.spoon`.
 
-The selection criteria (semantic-rich AST, comment/annotation preservation, robust
-re-serialization, Java 21 support) were resolved during the initial POC. Other
-candidates evaluated at the time (JavaParser, Eclipse JDT, ANTLR) are not used.
-
-The decisive advantage of Spoon over a purely syntactic parser is that it does
-**not** stop at a token tree: it provides a fully resolved, navigable object model
-of the type system and of the in-code dependencies (`CtFieldReference`,
-`CtExecutableReference`, `CtTypeReference`, `CtVariableAccess`, etc.). This is what
-makes the declaration-order dependency graph (see
-[`declaration-order-dependencies.md`](declaration-order-dependencies.md)) feasible:
-each `*DependencyProvider` walks the resolved references inside a member's body to
-discover which other members it depends on, instead of guessing from textual
-identifiers.
+Spoon provides declarations, source positions, and references to types and members. Dependency providers use these
+references to identify declarations that must stay in order. The parser builds one model per file in no-classpath
+mode, so some external declarations may be unavailable. [Declaration-order dependencies](declaration-order-dependencies.md).
 
 ## Where it fits in the pipeline
 
 ```
 SrcFile (raw text + path)
     ↓
-SpoonParser.parseJavaSrcFile(srcFile, printerConfig)
+SpoonParser.parseJavaSrcFile(srcFile)
     ↓
 SpoonAstModel
-    ├─ CtCompilationUnit       (Spoon AST)
-    ├─ JHarmonizerOptOuts      (resolved file/type-scope opt-out directives)
-    ├─ originalMemberOrder     (DFS source-order snapshot of CtTypeMembers)
-    └─ Supplier<SerializedSrcWithSkippedTypeRanges>  (lazy re-serialization)
+    ├─ CtCompilationUnit           (Spoon AST)
+    ├─ JHarmonizerOptOuts          (resolved file/type-scope opt-out directives)
+    ├─ originalMemberOrder         (DFS source-order snapshot of CtTypeMembers)
+    ├─ originalAnnotationSrcGroups (immutable source fragments, gap layouts, and original replacement code)
+    └─ srcCode                     (exact original text for source offsets)
     ↓
-Sorter → SpoonSrcPrinter → Formatter
+Sorter → SortingResult (same SpoonAstModel after sorting, selected orders, change flags, diagnostics, timing)
+    ↓
+Flow: SortingResult → SpoonPrintingInput → SpoonSrcPrinter → Formatter
 ```
 
 ## Key components
@@ -51,11 +44,23 @@ Sorter → SpoonSrcPrinter → Formatter
 | Class                                | Role                                                                                                  |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------|
 | `SpoonParser`                        | Entry point. Wraps the source in a `VirtualFile`, builds a `Launcher` with `complianceLevel = 21`, and assembles the `SpoonAstModel`. |
-| `SpoonAstModel`                      | Immutable post-parse snapshot used by the rest of the pipeline.                                       |
+| `SpoonAstModel`                      | Typed processing context with the mutable Spoon AST, immutable annotation groups, original source, opt-outs, and source-order snapshot. |
+| `SpoonPrintingInput`                 | Post-parse printing context with the shared working AST, source data, skipped types, and selected annotation orders. |
 | `JHarmonizerOptOutResolver`          | Resolves file-scope and type-scope opt-out directives from the parsed `CtCompilationUnit`.            |
-| `RelocationDetector`                 | Captures the original DFS source order of `CtTypeMember`s so the serializer can compute relocations.  |
+| `SpoonTypeTreeUtils`                  | Traverses source type trees and enclosing types; captures the original DFS order of `CtTypeMember`s with `streamDeclaredHierarchy`. |
 | `SpoonSrcPrinter` / `SrcPrinterOutput` | Standalone source-fragment printing and member layout; see [source printer](source-printer.md). |
 | `SpoonModelBuildException`           | Wraps Spoon parse failures with the offending source path and a human-readable diagnostic.            |
+
+## Annotation groups
+
+The parser supplies the original source and Spoon model to `AnnotationSourceScanner`. The scanner uses Java tokens
+to find adjacent annotation uses, including array-dimension and receiver annotations omitted by Spoon. For each group
+it records the exact annotation text, source ranges, sorting criteria, and order-preservation keys. It also records
+the gaps and prepares the whitespace needed when an annotation moves.
+
+`SpoonAstModel` holds these groups in source order. The sorter and printer read the same groups.
+See [annotation type resolution](annotation-type-resolution.md), [annotation order preservation](annotation-order-preservation.md),
+and [annotation rendering](source-printer.md#annotation-group-rendering).
 
 ## What is preserved
 
@@ -67,9 +72,7 @@ Sorter → SpoonSrcPrinter → Formatter
 
 ## Java version
 
-`SpoonParser.JAVA_VERSION = 21` — Spoon 11.x is required because earlier Spoon versions
-do not support Java 17+ source compliance levels. See the build memory: minimum runtime
-target is Java 17 (Spoon's own requirement); test compilation targets Java 21.
+`SpoonParser` parses source at Java 21 compliance. The core module targets Java 17 at runtime and Java 21 for tests.
 
 ## Failure mode
 

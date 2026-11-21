@@ -5,8 +5,10 @@ package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator.HEADER;
 import static io.github.lemon_ant.jharmonizer.core.config.unified.UnifiedSeparator.NEW_LINE;
 import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonGroupSeparatorUtils.resolveSeparator;
+import static io.github.lemon_ant.jharmonizer.core.spoon.SpoonTypeUtils.findEffectiveMemberStart;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findEffectiveMemberEnd;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findExplicitTypeMembers;
+import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.findLeadingTypeCommentStart;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasLeadingCommentOnSeparateLine;
 import static io.github.lemon_ant.jharmonizer.core.translator.spoon.SpoonTypeMemberUtils.hasMatchingLeadingComment;
 
@@ -29,29 +31,27 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-/**
- * Stateless source-fragment printer with explicit configuration for each call.
- * Each invocation owns its output buffer and skipped-type ranges.
- */
+/** Renders declarations and annotation groups from the original source using per-call settings. */
 @UtilityClass
-final class SpoonSrcPrinter {
+public final class SpoonSrcPrinter {
 
     /**
-     * Prints the current declaration order with independent state for each invocation.
-     * Calls for independent models may run concurrently with different configurations.
-     * @param compilationUnit compilation unit with positions referring to {@code srcCode}
-     * @param srcCode original source
-     * @param sortingSkippedTypes types to copy without restructuring
-     * @param printerConfig immutable spacing configuration
-     * @return printed source and immutable skipped-type ranges, independent of subsequent calls
+     * Prints declarations in AST order and annotations in the selected source-fragment order.
+     * @param printingInput working AST, selected annotation orders, original source, and excluded types
+     * @param printerConfig the spacing configuration for this invocation
+     * @return printed source and immutable skipped-type ranges
      */
     @NonNull
-    static SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(
-            @NonNull CtCompilationUnit compilationUnit,
-            @NonNull String srcCode,
-            @NonNull Set<CtType<?>> sortingSkippedTypes,
-            @NonNull PrinterConfig printerConfig) {
-        return new Serialization(srcCode, sortingSkippedTypes, printerConfig).serializeCompilationUnit(compilationUnit);
+    public static SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(
+            @NonNull SpoonPrintingInput printingInput, @NonNull PrinterConfig printerConfig) {
+        CtCompilationUnit compilationUnit = printingInput.getCompilationUnit();
+        String srcCode = printingInput.getSrcCode();
+        if (SpoonTypeTreeUtils.hasNoDeclaredTypes(compilationUnit)) {
+            SrcPrinterOutput srcPrinterOutput = new SrcPrinterOutput(printingInput);
+            srcPrinterOutput.printSrcRange(0, srcCode.length());
+            return new SerializedSrcWithSkippedTypeRanges(srcPrinterOutput.toString(), Map.of());
+        }
+        return new Serialization(printingInput, printerConfig).serializeCompilationUnit(compilationUnit);
     }
 
     /** Confines mutable printing state to one invocation. */
@@ -68,6 +68,9 @@ final class SpoonSrcPrinter {
         private final Set<CtType<?>> sortingSkippedTypes;
 
         @NonNull
+        private final String srcCode;
+
+        @NonNull
         private final SrcPrinterOutput srcPrinterOutput;
 
         private static boolean needsSeparatorBefore(CtTypeMember member, boolean first) {
@@ -76,9 +79,10 @@ final class SpoonSrcPrinter {
                     || !member.getAnnotations().isEmpty();
         }
 
-        private Serialization(String srcCode, Set<CtType<?>> sortingSkippedTypes, PrinterConfig printerConfig) {
-            srcPrinterOutput = new SrcPrinterOutput(srcCode);
-            this.sortingSkippedTypes = sortingSkippedTypes;
+        private Serialization(SpoonPrintingInput printingInput, PrinterConfig printerConfig) {
+            srcPrinterOutput = new SrcPrinterOutput(printingInput);
+            srcCode = printingInput.getSrcCode();
+            sortingSkippedTypes = printingInput.getSortingSkippedTypes();
             this.printerConfig = printerConfig;
         }
 
@@ -106,28 +110,28 @@ final class SpoonSrcPrinter {
             }
             String headerText = groupSeparator.getHeaderText();
             if (headerText != null && !hasMatchingLeadingComment(member, headerText)) {
-                srcPrinterOutput.printGroupHeader(member.getPosition().getSourceStart(), headerText);
+                srcPrinterOutput.printGroupHeader(findEffectiveMemberStart(member), headerText);
             }
         }
 
-        private void printType(CtType<?> type) {
+        private void printType(CtType<?> type, int typeStart) {
             SourcePosition position = type.getPosition();
             if (sortingSkippedTypes.contains(type)) {
                 int start = srcPrinterOutput.getPrintedLength();
-                srcPrinterOutput.printFragment(position.getSourceStart(), position.getSourceEnd());
+                srcPrinterOutput.printFragment(typeStart, position.getSourceEnd());
                 sortingSkippedTypeRanges.put(type, new SrcCharacterRange(start, srcPrinterOutput.getPrintedLength()));
                 return;
             }
             List<CtTypeMember> members = findExplicitTypeMembers(type);
             if (members.isEmpty()) {
-                srcPrinterOutput.printFragment(position.getSourceStart(), position.getSourceEnd());
+                srcPrinterOutput.printFragment(typeStart, position.getSourceEnd());
                 return;
             }
             int[] memberStarts = members.stream()
-                    .mapToInt(member -> member.getPosition().getSourceStart())
+                    .mapToInt(SpoonTypeUtils::findEffectiveMemberStart)
                     .sorted()
                     .toArray();
-            srcPrinterOutput.printFragment(position.getSourceStart(), memberStarts[0] - 1);
+            srcPrinterOutput.printFragment(typeStart, memberStarts[0] - 1);
             printTypeMembers(
                     members,
                     memberStarts,
@@ -142,7 +146,7 @@ final class SpoonSrcPrinter {
 
         private void printTypeMember(CtTypeMember member, int... memberStarts) {
             if (member instanceof CtType<?> nestedType) {
-                printType(nestedType);
+                printType(nestedType, findEffectiveMemberStart(nestedType));
                 return;
             }
             // Locate the next original declaration even after sorting; equal starts can occur in multi-field
@@ -151,7 +155,7 @@ final class SpoonSrcPrinter {
                     Arrays.binarySearch(memberStarts, member.getPosition().getSourceEnd() + 1);
             int nextIndex = boundary < 0 ? -boundary - 1 : boundary;
             int end = nextIndex < memberStarts.length ? memberStarts[nextIndex] - 1 : findEffectiveMemberEnd(member);
-            srcPrinterOutput.printFragment(member.getPosition().getSourceStart(), end);
+            srcPrinterOutput.printFragment(findEffectiveMemberStart(member), end);
         }
 
         private void printTypeMembers(
@@ -173,12 +177,13 @@ final class SpoonSrcPrinter {
 
         @NonNull
         private SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(CtCompilationUnit compilationUnit) {
-            List<CtType<?>> rootTypes = SpoonTypeUtils.getRootTypes(compilationUnit);
+            List<CtType<?>> rootTypes = compilationUnit.getDeclaredTypes();
             int firstTypeStart = rootTypes.stream()
-                    .mapToInt(type -> type.getPosition().getSourceStart())
+                    .mapToInt(SpoonTypeUtils::findEffectiveMemberStart)
                     .min()
                     .orElseThrow(IllegalStateException::new);
-            if (srcPrinterOutput.printFragment(0, firstTypeStart - 1)) {
+            int firstTypeCommentStart = findLeadingTypeCommentStart(compilationUnit, firstTypeStart, srcCode);
+            if (srcPrinterOutput.printFragment(0, firstTypeCommentStart - 1)) {
                 srcPrinterOutput.writeln();
             }
             int lastTypeEnd = -1;
@@ -187,7 +192,8 @@ final class SpoonSrcPrinter {
                 if (!first) {
                     srcPrinterOutput.writeln();
                 }
-                printType(rootType);
+                int typeStart = findEffectiveMemberStart(rootType);
+                printType(rootType, typeStart == firstTypeStart ? firstTypeCommentStart : typeStart);
                 lastTypeEnd = Math.max(lastTypeEnd, rootType.getPosition().getSourceEnd());
                 first = false;
             }

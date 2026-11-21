@@ -116,7 +116,7 @@ back into a `MemberGroupBlock`. Separator directives propagate to the printer.
 ## Top-level types
 
 `SpoonSorter` reuses the same comparator machinery for top-level types of a
-compilation unit, but with the simpler `ComparatorUtils.buildOrderingKeyComparator(...)`
+source file, but with the simpler `ComparatorUtils.buildOrderingKeyComparator(...)`
 (member-only) chain — top-level types do not participate in accessor clustering or in
 the per-type declaration-order dependency graph.
 

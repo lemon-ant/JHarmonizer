@@ -229,7 +229,7 @@ public enum FilterMode implements DescribedValue {
 
 Handling cross-file circular initializer cycles would require JHarmonizer to:
 
-1. Detect dependency cycles that span separate compilation units (files the tool may or may not
+1. Detect dependency cycles that span separate source files (which the tool may or may not
    be processing together).
 2. Decide how to order types across files — a problem with no safe general solution when a true
    cycle exists.
@@ -245,7 +245,7 @@ from.
 
 ## What JHarmonizer does handle: single-file multi-type cycles
 
-When all participating types live in the **same `.java` file** (same compilation unit),
+When all participating types live in the **same `.java` file**,
 JHarmonizer's `CrossTypeConstantBackRefDependencyProvider` detects these cross-type back-reference
 chains via a depth-first traversal of static-field initializer expressions, and adds the necessary
 dependency edges to the ordering graph.
@@ -254,7 +254,7 @@ This includes:
 
 - A direct two-type back-reference between a class and a sibling enum constant in the same file.
 - A chain of arbitrary depth: `T.F → E1.SF1 → E2.SF2 → … → T.G`, as long as all intermediate
-  types appear in the same compilation unit.
+  types appear in the same source file.
 - Nested types: an outer class depending on a nested enum whose constant initializer reads a nested
   class that back-references the outer class (a three-node cycle entirely within one file).
 

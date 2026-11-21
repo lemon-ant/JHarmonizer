@@ -2,13 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.translator.spoon;
 
-import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentEndExclusive;
-import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findFragmentStartWithIndentation;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findContentEndExclusive;
+import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findContentStartWithIndentation;
 import static io.github.lemon_ant.jharmonizer.core.utilities.SrcCodeUtils.findIndentationStart;
 
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroup.AnnotationSrcFragment;
+import io.github.lemon_ant.jharmonizer.core.translator.spoon.annotation.AnnotationSrcGroupRenderer;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import lombok.NonNull;
 
-/** Owns one serialization buffer and copies source slices without intermediate strings. */
+/** Copies source ranges into the output buffer and renders selected annotation orders. */
 final class SrcPrinterOutput {
 
     @NonNull
@@ -20,6 +27,12 @@ final class SrcPrinterOutput {
     private final String lineSeparator;
 
     @NonNull
+    private final NavigableMap<Integer, AnnotationSrcGroup> originalAnnotationSrcGroupsBySrcStart = new TreeMap<>();
+
+    @NonNull
+    private final Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart;
+
+    @NonNull
     private final String srcCode;
 
     @Override
@@ -28,11 +41,15 @@ final class SrcPrinterOutput {
     }
 
     /**
-     * Creates an output buffer using the original source's size and dominant line separator.
-     * @param srcCode original source
+     * Indexes annotation groups by source start and prepares the output buffer.
+     * @param printingInput original source, parsed groups, and selected orders
      */
-    SrcPrinterOutput(@NonNull String srcCode) {
-        this.srcCode = srcCode;
+    SrcPrinterOutput(@NonNull SpoonPrintingInput printingInput) {
+        srcCode = printingInput.getSrcCode();
+        sortedAnnotationSrcFragmentsByGroupSrcStart = printingInput.getSortedAnnotationSrcFragmentsByGroupSrcStart();
+        printingInput
+                .getOriginalAnnotationSrcGroups()
+                .forEach(group -> originalAnnotationSrcGroupsBySrcStart.put(group.getStart(), group));
         lineSeparator = detectDominantLineSeparator(srcCode);
         buffer = new StringBuilder(srcCode.length());
     }
@@ -53,13 +70,14 @@ final class SrcPrinterOutput {
      */
     boolean printFragment(int start, int end) {
         try {
-            int indentationStart = findFragmentStartWithIndentation(start, end, srcCode);
+            int endExclusive = end + 1;
+            int indentationStart = findContentStartWithIndentation(start, endExclusive, srcCode);
             if (indentationStart > end) {
                 return false;
             }
             // Interior whitespace belongs to the fragment; surrounding gaps belong to its container.
-            int fragmentEndExclusive = findFragmentEndExclusive(start, end, srcCode);
-            buffer.append(srcCode, indentationStart, fragmentEndExclusive);
+            int fragmentEndExclusive = findContentEndExclusive(start, endExclusive, srcCode);
+            printSrcRange(indentationStart, fragmentEndExclusive);
             writeln();
             return true;
         } catch (IndexOutOfBoundsException exception) {
@@ -83,11 +101,33 @@ final class SrcPrinterOutput {
     }
 
     /**
+     * Copies a source range, applying selected orders to the annotation groups wholly inside it.
+     * @param start first source offset
+     * @param endExclusive first source offset after the range
+     */
+    void printSrcRange(int start, int endExclusive) {
+        int cursor = start;
+        for (AnnotationSrcGroup group : originalAnnotationSrcGroupsBySrcStart
+                .subMap(start, true, endExclusive, false)
+                .values()) {
+            if (group.getEndExclusive() > endExclusive) {
+                // A slice ending inside a group cannot safely reorder that group independently.
+                continue;
+            }
+            buffer.append(srcCode, cursor, group.getStart())
+                    .append(AnnotationSrcGroupRenderer.renderReplacement(
+                            group, sortedAnnotationSrcFragmentsByGroupSrcStart.get(group.getStart())));
+            cursor = group.getEndExclusive();
+        }
+        buffer.append(srcCode, cursor, endExclusive);
+    }
+
+    /**
      * Copies a nonblank source tail after one blank line, preserving indentation and all remaining text.
      * @param start first source offset after the last original top-level type
      */
     void printTail(int start) {
-        int tailStart = findFragmentStartWithIndentation(start, srcCode.length() - 1, srcCode);
+        int tailStart = findContentStartWithIndentation(start, srcCode.length(), srcCode);
         if (tailStart < srcCode.length()) {
             writeln();
             buffer.append(srcCode, tailStart, srcCode.length());

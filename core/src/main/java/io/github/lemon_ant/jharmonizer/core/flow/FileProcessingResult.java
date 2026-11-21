@@ -4,9 +4,9 @@ package io.github.lemon_ant.jharmonizer.core.flow;
 
 import io.github.lemon_ant.jharmonizer.core.formatter.FormattingStatistic;
 import io.github.lemon_ant.jharmonizer.core.sorter.SortingStatistic;
+import io.github.lemon_ant.jharmonizer.core.spoon.MemberRelocation;
 import io.github.lemon_ant.jharmonizer.core.translator.ParsingStatistic;
 import io.github.lemon_ant.jharmonizer.core.translator.SerializationStatistic;
-import io.github.lemon_ant.jharmonizer.core.translator.spoon.MemberRelocation;
 import java.nio.file.Path;
 import java.util.Collection;
 import lombok.AccessLevel;

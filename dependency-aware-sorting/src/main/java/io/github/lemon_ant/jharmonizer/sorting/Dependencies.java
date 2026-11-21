@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.sorting;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.NonNull;
@@ -20,9 +21,12 @@ import lombok.Value;
 public class Dependencies<TNode> {
     private static final Dependencies<?> EMPTY_INSTANCE = new Dependencies<>(List.of());
 
+    @NonNull
     List<Dependency<TNode>> edges;
 
-    /** Returns an empty dependency set (no ordering constraints). */
+    /**
+     * Returns an empty dependency set (no ordering constraints).
+     */
     @NonNull
     @SuppressWarnings("unchecked")
     public static <TNode> Dependencies<TNode> empty() {
@@ -50,9 +54,17 @@ public class Dependencies<TNode> {
     }
 
     /**
+     * Creates a read-only view of the supplied dependency edges.
+     * @param edges dependency edges that callers must not modify after construction
+     */
+    public Dependencies(@NonNull List<Dependency<TNode>> edges) {
+        this.edges = Collections.unmodifiableList(edges);
+    }
+
+    /**
      * A single {@code provider → dependent} ordering constraint.
      *
-     * @param <TNode> the type of items
+     * @param <TNode>   the type of items
      * @param provider  the item that must appear first
      * @param dependent the item that must appear after its provider
      */

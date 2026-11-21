@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.lemon_ant.jharmonizer.core.e2e;
 
-import static io.github.lemon_ant.jharmonizer.core.e2e.JavaCompileTestUtils.compileJavaSrcWithRelease21;
+import static io.github.lemon_ant.jharmonizer.core.testutils.JavaCompileTestUtils.compileJavaSourcesWithRelease21;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.lemon_ant.jharmonizer.core.testutils.JavaCompileTestUtils;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
@@ -35,7 +37,7 @@ abstract class AbstractCompilableSrcProcessorE2ETest
     }
 
     private static void assertCompilesAndRuns(Path srcFile, Path outputDirectory) throws Exception {
-        JavaCompileTestUtils.CompileResult result = compileJavaSrcWithRelease21(srcFile, outputDirectory);
+        JavaCompileTestUtils.CompileResult result = compileJavaSourcesWithRelease21(List.of(srcFile), outputDirectory);
         assertThat(result.getExitCode())
                 .as("Expected javac --release 21 to compile %s. Diagnostics:%n%s", srcFile, result.getOutput())
                 .isZero();
