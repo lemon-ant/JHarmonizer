@@ -15,7 +15,7 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 import lombok.NonNull;
 
-/** Owns one serialization buffer and copies source slices without intermediate strings. */
+/** Copies source ranges into the output buffer and renders selected annotation orders. */
 final class SrcPrinterOutput {
 
     @NonNull
@@ -41,8 +41,8 @@ final class SrcPrinterOutput {
     }
 
     /**
-     * Creates an output buffer using the original source's size and dominant line separator.
-     * @param printingInput original source and immutable annotation fragments with selected orders
+     * Indexes annotation groups by source start and prepares the output buffer.
+     * @param printingInput original source, parsed groups, and selected orders
      */
     SrcPrinterOutput(@NonNull SpoonPrintingInput printingInput) {
         srcCode = printingInput.getSrcCode();
@@ -101,7 +101,7 @@ final class SrcPrinterOutput {
     }
 
     /**
-     * Copies a source range, replacing complete annotation groups without changing surrounding whitespace.
+     * Copies a source range, applying selected orders to the annotation groups wholly inside it.
      * @param start first source offset
      * @param endExclusive first source offset after the range
      */

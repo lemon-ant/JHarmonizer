@@ -33,12 +33,7 @@ import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-/**
- * Root coordinator for sorting:
- * - (later) reorders top-level types in the source file,
- * - recursively processes nested types (depth-first),
- * - applies member sorting to each type via
- */
+/** Sorts top-level types and their members in the AST, and computes separate orders for source annotation groups. */
 @Slf4j
 @RequiredArgsConstructor
 @SuppressWarnings("PMD.CouplingBetweenObjects")
@@ -53,10 +48,10 @@ public class SpoonSorter {
     private final CompiledConfig compiledConfig;
 
     /**
-     * Sorts declaration order in the AST and records changed annotation permutations.
-     * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
-     * @return the supplied model after in-place declaration sorting, selected annotation orders, and change flags
-     * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
+     * Sorts declarations in place and selects an order for each changed annotation group.
+     * @param spoonAstModel freshly parsed source context
+     * @return the working model with its declaration-change flag and changed annotation orders
+     * @throws IllegalStateException if the shared AST has already been submitted for sorting
      */
     @NonNull
     public SpoonSortingResult sortCompilationUnitRecursively(@NonNull SpoonAstModel spoonAstModel) {
@@ -79,9 +74,8 @@ public class SpoonSorter {
     @SuppressWarnings("PMD.AvoidSynchronizedStatement")
     private static CtCompilationUnit claimCompilationUnitForSorting(SpoonAstModel spoonAstModel) {
         CtCompilationUnit compilationUnit = spoonAstModel.getCompilationUnit();
-        // Model views share this unit. Claim it before any mutation, including unchanged or failed attempts.
-        // Spoon copies metadata when cloning a unit; a consumed clone also requires reparsing before sorting.
-        // Only this short metadata claim uses the monitor; sorting and I/O must stay outside it.
+        // Claim the shared AST before sorting so every attempt consumes it, including one that fails or changes
+        // nothing. Spoon also copies this claim to clones. Keep sorting and I/O outside the monitor.
         synchronized (compilationUnit) {
             if (Boolean.TRUE.equals(compilationUnit.getMetadata(SORTING_STARTED_METADATA))) {
                 throw new IllegalStateException(
@@ -177,15 +171,7 @@ public class SpoonSorter {
                         .flatMap(memberGroupBlock -> memberGroupBlock.getTypeMembers().stream()));
     }
 
-    /**
-     * Depth-first recursion:
-     * 1) process nested types,
-     * 2) sort current type members,
-     * 3) apply group boundary markers and flatten.
-     * <p>
-     * This order keeps the logic deterministic and ensures nested types are already "clean"
-     * when the outer type is printed.
-     */
+    /** Sorts nested types before the current type's member groups. An excluded type skips its entire subtree. */
     private boolean sortTypeRecursively(
             CtType<?> currentType,
             Set<CtType<?>> sortingSkippedTypes, /*TODO We use only srcFile.getPath*/
@@ -213,7 +199,6 @@ public class SpoonSorter {
         for (CtType<?> nestedType : currentType.getNestedTypes()) {
             nestedMembersReordered |= sortTypeRecursively(nestedType, sortingSkippedTypes, srcFile);
         }
-        // Skip this scope before building a graph or result wrapper, after processing any nested scopes.
         if (currentType.getTypeMembers().size() <= MAX_MEMBERS_WITHOUT_SORTING) {
             return nestedMembersReordered;
         }
@@ -222,7 +207,7 @@ public class SpoonSorter {
         return nestedMembersReordered || memberOrdering.isReordered();
     }
 
-    /** Working model, selected annotation orders, and declaration changes produced by one sorting invocation. */
+    /** Sorted working model and its declaration and annotation order changes. */
     @Value
     @AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
     public static class SpoonSortingResult {
@@ -230,6 +215,7 @@ public class SpoonSorter {
         /** Whether Spoon declaration order changed, including top-level types. */
         boolean membersReordered;
 
+        /** Sorted fragment lists for changed annotation groups, indexed by original group start. */
         @NonNull
         Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart;
 
@@ -237,18 +223,12 @@ public class SpoonSorter {
         @NonNull
         SpoonAstModel sortedSpoonAstModel;
 
-        /**
-         * Reports whether this invocation selected a different annotation order for any source group.
-         * @return whether the changed-order map is non-empty
-         */
+        /** Returns whether any source annotation group changed order. */
         public boolean isAnnotationsReordered() {
             return !sortedAnnotationSrcFragmentsByGroupSrcStart.isEmpty();
         }
 
-        /**
-         * Reports whether declaration or annotation order changed.
-         * @return whether any source elements were reordered
-         */
+        /** Returns whether any declaration or annotation order changed. */
         public boolean isReordered() {
             return isAnnotationsReordered() || membersReordered;
         }

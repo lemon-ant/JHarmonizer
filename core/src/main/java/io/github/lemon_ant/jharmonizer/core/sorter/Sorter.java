@@ -33,11 +33,11 @@ public final class Sorter {
     }
 
     /**
-     * Reorders declarations in the shared AST and returns the same model with separate selected annotation orders.
+     * Sorts declarations and annotations and includes member relocations when declarations change.
      *
-     * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
-     * @return the working model after sorting, selected annotation orders, diagnostics, change flags, and statistics
-     * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
+     * @param spoonAstModel freshly parsed source context
+     * @return sorting result with member diagnostics
+     * @throws IllegalStateException if the shared AST has already been submitted for sorting
      */
     @NonNull
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel) {
@@ -45,17 +45,16 @@ public final class Sorter {
     }
 
     /**
-     * Sorts a parsed model once and prepares member diagnostics only when requested.
-     * @param spoonAstModel freshly parsed model; each shared AST may be sorted only once
-     * @param collectMemberRelocations whether the caller needs the detailed member report
-     * @return the working model after sorting, selected annotation orders, requested diagnostics, flags, and statistics
-     * @throws IllegalStateException if sorting was already attempted for the shared Spoon AST
+     * Sorts declarations in place and selects changed annotation orders separately.
+     * @param spoonAstModel freshly parsed source context
+     * @param collectMemberRelocations whether to report relocations when declarations change
+     * @return sorting result with timing for sorting and any requested diagnostics
+     * @throws IllegalStateException if the shared AST has already been submitted for sorting
      */
     @NonNull
     @SuppressWarnings("PMD.GuardLogStatement")
     public SortingResult sort(@NonNull SpoonAstModel spoonAstModel, boolean collectMemberRelocations) {
         log.trace("Sorting {}", spoonAstModel.getPath());
-        // Each flow sorts a parsed model once, so invocation changes also describe changes from its source order.
         StopWatch.TimedResult<SortedContent> sortingResult = StopWatch.measure(() -> {
             SpoonSortingResult spoonSortingResult = spoonSorter.sortCompilationUnitRecursively(spoonAstModel);
             SpoonAstModel sortedSpoonAstModel = spoonSortingResult.getSortedSpoonAstModel();

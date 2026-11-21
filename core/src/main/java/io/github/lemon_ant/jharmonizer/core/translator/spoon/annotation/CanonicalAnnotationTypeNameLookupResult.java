@@ -16,10 +16,8 @@ import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
- * Outcome of a canonical annotation type-name lookup. Source successes require an annotation declaration.
- * Single imports validate available declarations; a missing declaration leaves only canonical import evidence.
- * A non-terminal lookup allows the next stage; a terminal lookup stops even when its type name is unknown.
- * For example, an unavailable superclass must block imports that might name a shadowed annotation.
+ * A canonical name, a conclusive miss ({@link #NOT_FOUND}), or a blocked lookup ({@link #UNRESOLVED}).
+ * Only a conclusive miss allows the next lookup stage.
  */
 @Getter(AccessLevel.PACKAGE)
 @Value
@@ -37,8 +35,7 @@ class CanonicalAnnotationTypeNameLookupResult {
     boolean terminal;
 
     /**
-     * Derives the name from one definite type import, checking its declaration when available.
-     * An unresolved ordinary import has no declaration: its canonical spelling is the remaining evidence.
+     * Derives the canonical name from the imported annotation declaration or the single import's type name.
      * @param typeImport selected single type import
      * @throws IllegalArgumentException if the import does not establish a single type name
      * @throws IllegalStateException if an available imported declaration is not an annotation type
@@ -71,7 +68,6 @@ class CanonicalAnnotationTypeNameLookupResult {
         terminal = true;
     }
 
-    /** Creates a status without a successful type name. */
     @SuppressWarnings("PMD.NullAssignment")
     private CanonicalAnnotationTypeNameLookupResult(boolean terminal) {
         canonicalAnnotationTypeName = null;

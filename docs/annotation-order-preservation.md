@@ -57,11 +57,9 @@ exposes the order.
 | `repeated` | `["z", "a"]` | `["a", "z"]` |
 | `mixed` | `["b", "c", "a"]` | `["a", "b", "c"]` |
 
-Moving `@Marker` leaves the first sequence intact. Moving `@Tags` in `mixed` changes the second sequence even with
-its argument text intact. One direct `@Tag` can coexist with one explicit `@Tags`. Two direct `@Tag` occurrences with
-an explicit `@Tags` in the same declaration or type context are a compile-time error. The implicit container that
-would hold the two direct occurrences would conflict with the explicit one. A `@Tag` inside the explicit container's
-array is an array entry. Only annotations written outside the container count as direct occurrences on the field.
+One direct `@Tag` can coexist with one explicit `@Tags`. With two direct `@Tag` uses in the same context, Java would
+generate an implicit container that conflicts with the explicit one. Nested `@Tag` values are array entries inside
+the explicit container.
 
 With `annotations-ordering: arguments-alpha`, the comparator prefers `@Marker @demo.Tag("a") @Tag("z")` for
 `repeated`. The two `Tag` uses share a dependency key, so the sorter emits `@Marker @Tag("z") @demo.Tag("a")`
@@ -103,10 +101,8 @@ here. The shared key across the two fields creates no dependency because each ca
 
 ## Source `@Repeatable` relationships
 
-`AnnotationDependencyKeyResolver` prepares the top-level and member declaration index and exact single-type import
-names for one source file. It computes a root key for every annotation declaration in that file before the scanner
-processes uses. This makes relationships available to the first group even when the annotation declaration appears
-later and the group itself contains no confirmed use of that annotation type.
+Before scanning uses, `AnnotationDependencyKeyResolver` computes a root key for every annotation declared in the
+file. This gives each group access to all source repeatable relationships, including declarations that appear later.
 
 For a confirmed type name, `computeRootGroupKey` walks the chain as follows.
 
@@ -120,24 +116,17 @@ For a confirmed type name, `computeRootGroupKey` walks the chain as follows.
    chain. Continue at that name. Without either kind of evidence, terminate with `?.` followed by the formatted
    name. For example, a reference spelled through an unavailable inherited owner may still be an alias.
 
-Unavailable external declarations are expected in Spoon's `no-classpath` mode. They can yield a terminal key
-without contributing repeatable metadata. When `Tag` points to `Tags` and `Tags` points to `TagGroups` in source,
-all three share the final `TagGroups` key. Every visited source declaration must be an annotation type. A malformed
-class literal, inconsistent references, or a cycle fails processing for that file. The resolver tests create these
-invalid metadata shapes by mutating parsed models. See [metadata tests][metadata-tests].
+External declarations can supply terminal names. The resolver reads repeatable metadata only from declarations in
+the current file. A source chain `Tag → Tags → TagGroups` gives all three types the `TagGroups` key. A malformed
+class literal, inconsistent references, or a cycle fails processing for that file. These invalid shapes are tested
+with deliberately modified Spoon models. [Metadata tests][metadata-tests]
 
-The `computeIfAbsent` wrapper caches successful results by confirmed canonical name. The computation traverses the
-source chain independently of the cache and detects cycles within that traversal. During preparation, each confirmed
-terminal receives a self-mapping after the computation returns, including an imported external container. An
-unconfirmed terminal may be a cached value but has no entry of its own. For example, `demo.Tag → ?.library.Tags`
-can be a relationship in the cache, while `?.Tag` remains a key produced only for a use.
+The cache maps confirmed canonical names to terminal keys after a successful traversal. Each confirmed terminal also
+maps to itself. Unconfirmed terminals appear only as values, as in `demo.Tag → ?.library.Tags`.
 
-The external container fixtures show how exact import evidence changes the key. A source
-`@Repeatable(library.Stamps.class)` and a written `@library.Stamps` can both yield `?.library.Stamps`. An exact
-`import library.Stamps` gives the name
-resolver and the source metadata lookup the same canonical identity, so `@Stamp` and `@Stamps` can instead share
-`library.Stamps`. These examples shorten fixture package names. [Qualified use][external-container],
-[single-type import][imported-container]
+A source `@Repeatable(library.Stamps.class)` and an unconfirmed `@library.Stamps` can share `?.library.Stamps`.
+An exact `import library.Stamps` allows `@Stamp` and `@Stamps` to share the confirmed key `library.Stamps`.
+Package names are shortened here. [Qualified use][external-container], [single-type import][imported-container]
 
 ### A container with an omitted value
 
@@ -148,9 +137,8 @@ The source lookup confirms the relative `Owner.Tags`, while the fully written `T
 Their original keys have different simple names, `Tags` and `Tag`. [Source fixture][defaulted-array]
 
 The prepared source `Tag → Tags` relationship connects those two names. The collector adds the confirmed `Tags`
-key to the unconfirmed `Tag` fragment. With alphabetical sorting, independent `Able` and `Zed` move around the pair
-and the reflected values remain `["default", "direct"]`. A cache populated only by earlier confirmed uses would
-know `Tags → Tags` when processing this group and the alphabetical sort would reverse the two values.
+key to the unconfirmed `Tag` fragment. Alphabetical sorting can move `Able` and `Zed` around the pair while reflection
+continues to return `["default", "direct"]`.
 
 Without a source-declared repeatable relationship and without visible nested uses, `@Tags` or `@Tags(label = "x")`
 can hide repetitions supplied by a default `value`. The container declaration alone cannot establish the

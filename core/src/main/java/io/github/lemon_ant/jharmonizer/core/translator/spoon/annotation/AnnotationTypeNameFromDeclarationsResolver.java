@@ -19,22 +19,18 @@ import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtTypeReference;
 
-/**
- * Derives annotation type names by traversing available type declarations, including nested and inherited members.
- * Enclosing types, top-level roots, and owners selected through AST bindings or wildcard imports supply starting points
- * for the same traversal. These entry points serve stages 1, 2, and 4 of {@link AnnotationTypeNameResolver}.
- * Searches declarations in the current file; import spelling and qualified/contextual name inference remain in the caller.
- * Binding confirmation runs after single imports, which can shadow package names.
- */
+/** Resolves annotation names through declared and inherited member types in one source file. */
 final class AnnotationTypeNameFromDeclarationsResolver {
 
     @NonNull
+    // TODO Comment
     private final CtCompilationUnit compilationUnit;
 
     /** Available source owners indexed by their original imports; an absent entry denotes an unavailable owner. */
     @NonNull
     private final Map<CtImport, CtType<?>> srcOwnerTypesByWildcardImport;
 
+    // TODO Check the comment rightness
     /** All type visibility scopes, including local and anonymous types omitted from canonical declaration indexes. */
     @NonNull
     private final List<CtType<?>> srcTypeScopes;
@@ -44,7 +40,7 @@ final class AnnotationTypeNameFromDeclarationsResolver {
     private final List<CtImport> wildcardImportsInModelOrder;
 
     /**
-     * Prepares source type scopes and retains the required wildcard-import facts from the shared context.
+     * Prepares source type scopes and retains the required wildcard-import facts from the shared SpoonTypeImportContext.
      * @param compilationUnit original Spoon model of the source file
      * @param typeImportContext prepared import facts from the same original source-file model
      */
@@ -57,10 +53,8 @@ final class AnnotationTypeNameFromDeclarationsResolver {
     }
 
     /**
-     * Stage 4: confirms Spoon's source binding against the written name and wildcard imports.
-     * Spoon 11.5.0 can bind {@code @p.Derived.Tag} to source {@code Base.Tag} even when an unavailable
-     * wildcard import introduces type {@code p}, changing the annotation's identity.
-     * Reproduced by the compilable {@code wildcard-package-name-shadowing} fixture, without AST changes.
+     * Confirms an annotation-use binding to a source declaration by checking the written path and wildcard imports.
+     * An unavailable wildcard import can introduce a type named {@code p}, changing the meaning of {@code @p.Derived.Tag}.
      * @param annotationUseTypeReference original annotation-use binding, if Spoon reported one
      * @param writtenAnnotationTypeName tokenized type name retaining the written qualification
      * @return confirmed canonical annotation name, {@code UNRESOLVED} for a rejected source binding,
@@ -75,8 +69,7 @@ final class AnnotationTypeNameFromDeclarationsResolver {
             // in Spoon 11.5.0. The separate source scanner still supplies their names and offsets.
             return CanonicalAnnotationTypeNameLookupResult.NOT_FOUND;
         }
-        // getDeclaration() searches only sources, and our fresh parser model contains one source file.
-        // Classpath types such as java.lang.Deprecated return null here, unlike getTypeDeclaration().
+        // getDeclaration() limits confirmation to source declarations.
         CtType<?> boundTypeDeclaration = annotationUseTypeReference.getDeclaration();
         if (boundTypeDeclaration == null) {
             // No source declaration to confirm; later stages may still use the reference's name.
@@ -89,7 +82,7 @@ final class AnnotationTypeNameFromDeclarationsResolver {
     }
 
     /**
-     * Stage 1: searches enclosing source types from inner to outer, following nested and inherited members.
+     * Searches enclosing types from inner to outer. An unavailable parent in an inner type can hide an outer match.
      * @param annotationUseSrcStartOffset source offset of the annotation's opening {@code @}
      * @param writtenAnnotationTypeName tokenized type name retaining the written qualification
      * @return canonical annotation name, a blocking unresolved result, or no match in the enclosing types
@@ -119,7 +112,8 @@ final class AnnotationTypeNameFromDeclarationsResolver {
     }
 
     /**
-     * Stage 2: matches the first written segment to a top-level type, then follows the remaining member-type path.
+     * Matches the first written segment to a top-level type, then follows the member path.
+     * Package prefixes are interpreted during binding confirmation, after single imports have been checked.
      * @param writtenAnnotationTypeName tokenized type name retaining the written qualification
      * @return canonical annotation name, a blocking unresolved result, or no matching top-level type
      * @throws IllegalStateException if a selected source declaration is not an annotation type
@@ -127,15 +121,6 @@ final class AnnotationTypeNameFromDeclarationsResolver {
     @NonNull
     CanonicalAnnotationTypeNameLookupResult resolveCanonicalAnnotationTypeNameInSrcRootTypeTrees(
             @NonNull String writtenAnnotationTypeName) {
-        // Resolve the whole written name through declared type nesting, starting at a top-level type in the source
-        // file.
-        // Match a top-level path root: @Tag selects Tag; @Outer.Inner.Tag selects Outer, then follows Inner.Tag.
-        // Match the whole first segment, so Outer cannot match OuterOther.
-        // Do not strip the current package prefix: package demo; import library.demo; @demo.Owner.Tag
-        // selects library.demo.Owner.Tag, even when this file also declares demo.Owner.Tag.
-        // NOT_FOUND here does not exclude an imported first segment; stage 3 must check the original spelling.
-        // A same-package type from another file can obscure the package prefix even without imports.
-        // Stage 4 checks a package-qualified source path as part of AST-binding confirmation, not at this stage.
         Optional<CtType<?>> srcPathRootType = compilationUnit.getDeclaredTypes().stream()
                 .filter(srcType -> startsWithTypeName(writtenAnnotationTypeName, srcType.getSimpleName()))
                 .findFirst();
@@ -144,7 +129,10 @@ final class AnnotationTypeNameFromDeclarationsResolver {
                 .orElse(CanonicalAnnotationTypeNameLookupResult.NOT_FOUND);
     }
 
-    /** Checks the written path and every wildcard-import owner before accepting a source binding's canonical name. */
+    /**
+     * Requires a matching declaration through the package-qualified or wildcard-imported path.
+     * An unavailable owner, unresolved path, or competing declaration blocks confirmation.
+     */
     private boolean hasMatchingSrcDeclaration(String boundTypeName, String writtenAnnotationTypeName) {
         // E.g. @p.Derived.Tag reaches stage 4 because stage 2 matches only simple-name roots.
         // Now establish the source path; this check is name confirmation, not a separate Spoon workaround.
@@ -166,7 +154,7 @@ final class AnnotationTypeNameFromDeclarationsResolver {
                 // invalidating a source binding. Stop at that import after checking its preceding owners.
                 return false;
             }
-            // Java imports the owner's members, not the owner itself: wildcard-imported-member-scope.
+            // Wildcard lookup begins with a member of the imported owner.
             CanonicalAnnotationTypeNameLookupResult importedScopeLookup =
                     resolveAnnotationTypeNameInSrcTypeHierarchy(importedOwnerType, writtenAnnotationTypeName, false);
             if (!importedScopeLookup.isTerminal()) {
@@ -180,6 +168,11 @@ final class AnnotationTypeNameFromDeclarationsResolver {
         return hasSrcDeclarationMatchingBoundTypeName;
     }
 
+    /**
+     * Walks the written member path, using inheritance when the current owner has no direct declaration.
+     * A missing segment blocks lookup once an owner has matched a prefix, such as {@code Owner.Inner} in
+     * {@code Owner.Inner.Tag}. A conclusive miss before any match allows another starting type.
+     */
     @NonNull
     private CanonicalAnnotationTypeNameLookupResult resolveAnnotationTypeNameInSrcTypeHierarchy(
             CtType<?> scopeType, String relativeAnnotationTypeName, boolean scopeTypeMatchesWrittenPrefix) {
@@ -242,7 +235,6 @@ final class AnnotationTypeNameFromDeclarationsResolver {
 
     /**
      * Resolves the complete annotation name; intermediate owners may be ordinary types.
-     * Requires the final declaration to be an annotation before creating a successful result.
      */
     @NonNull
     private CanonicalAnnotationTypeNameLookupResult resolveCanonicalAnnotationTypeNameInSrcTypeScope(

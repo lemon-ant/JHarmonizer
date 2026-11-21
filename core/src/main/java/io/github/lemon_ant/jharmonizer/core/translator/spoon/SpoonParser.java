@@ -20,9 +20,9 @@ public class SpoonParser {
     private static final int JAVA_VERSION = 21;
 
     /**
-     * Parses the java source resource.
+     * Parses a Java source file and scans its annotation groups from the original text.
      * @param srcFile the original source file
-     * @return the java source resource
+     * @return parsed source context with the shared AST
      */
     @NonNull
     public static SpoonAstModel parseJavaSrcFile(@NonNull SrcFile srcFile) {
@@ -50,8 +50,8 @@ public class SpoonParser {
         CtCompilationUnit compilationUnit = extractCompilationUnit(srcFile, launcher);
         CtType<?> mainType = SpoonTypeUtils.findMainType(compilationUnit);
         JHarmonizerOptOuts optOuts = JHarmonizerOptOutResolver.resolve(srcFile, compilationUnit);
-        // Spoon's getOriginalSourceCode() may read the filesystem and returns null for virtual sources.
-        // Keep the supplied text and its annotation fragments in the processing model before reordering.
+        // TODO What does it mean?
+        // Spoon can return null for virtual source text. Scan the supplied text using the original AST.
         return SpoonAstModel.builder()
                 .originalAnnotationSrcGroups(AnnotationSourceScanner.scan(srcFile.getSrcCode(), compilationUnit))
                 .originalMemberOrder(SpoonTypeTreeUtils.streamDeclaredHierarchy(compilationUnit)

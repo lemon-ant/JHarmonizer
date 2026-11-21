@@ -21,8 +21,10 @@ public class SpoonTypeUtils {
     private static final int ONE_ROOT_TYPE = 1;
 
     /**
-     * Finds the earliest source offset of a member declaration and its annotations.
-     * Retains leading comments included in the member's source range reported by Spoon.
+     * Finds the earliest start reported by Spoon for the member and its positioned annotations.
+     * In the annotation group gap fixture, Spoon reports the start of {@code CommentedAnnotation} at a line comment
+     * after {@code @Ccc} and {@code @Bbb}. Taking the minimum includes those annotations and retains any earlier comments
+     * already within the reported member range.
      * @param member source-positioned type member to inspect
      * @return first source offset including annotations outside the member's reported source range
      */

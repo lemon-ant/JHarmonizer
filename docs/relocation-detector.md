@@ -23,11 +23,8 @@ package while exposing its read-only diagnostic data to those consumers.
 `SpoonSorter` emits declaration and annotation change flags while collecting final output. Element identities are
 compared against input order during the same traversal; checks stop after the first mismatch in each scope. Grouping
 and dependency repair complete before the flag is decided, so temporary moves that cancel out do not report a change.
-Annotation groups remain unchanged in source-range order. The separate map stores only changed annotation orders;
-its non-emptiness supplies the annotation-change flag without comparing group permutations.
-`SortingResult.isAnnotationsReordered()` controls annotation diffs. The independent `membersReordered` flag reports
-Spoon declaration changes, including top-level types. `isReordered()` derives their OR for flow status and sorting
-checks.
+The member detector uses declaration changes, including top-level types. Check flows use a source diff for annotation
+changes. [Sorting result](04-Sorter.md#input-and-output).
 
 `Sorter.sort(...)` prepares the LIS member report only when requested and declaration order changed. Check flows request
 and consume `SortingResult.memberRelocations`; `ReorderFlow` requests only the change flags. Annotation-only changes and

@@ -24,18 +24,17 @@ import lombok.experimental.UtilityClass;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtType;
 
-/** Orders original annotation fragments for source-preserving printing. */
+/** Applies annotation comparison criteria and source-order constraints within each source group. */
 @UtilityClass
 class SpoonAnnotationSorter {
     private static final int MINIMUM_SORTABLE_ANNOTATION_COUNT = 2;
 
     /**
-     * Sorts annotations within source groups, respecting confirmed and potential dependencies and disabled type scopes.
-     * Retains each original group and records only permutations that change its annotation order.
-     * @param annotationSrcGroupsInSrcOrder source annotation groups in their original scope order
+     * Sorts groups with at least two annotations outside excluded types.
+     * @param annotationSrcGroupsInSrcOrder parsed groups in source order
      * @param sortingSkippedTypes types excluded by opt-out directives
      * @param annotationComparator precompiled annotation comparator
-     * @return read-only changed annotation orders indexed by original group source start; empty when no order changes
+     * @return read-only map from the original start of each changed group to its sorted fragments
      */
     @NonNull
     @SuppressWarnings("PMD.UseConcurrentHashMap")
@@ -84,8 +83,8 @@ class SpoonAnnotationSorter {
                 }
             }
         }
-        // Java exposes repeated and mixed direct/container annotations in source order. Encode that order as
-        // dependencies: overriding comparisons for annotations with the same group key would violate transitivity.
+        // Linking consecutive fragments for each key preserves the sequence of repeated and contained annotations.
+        // The dependency sorter repairs the preferred order without changing the comparator's transitive ordering.
         return SimplifiedDependencyAwareSorter.sort(
                 originalAnnotationSrcFragments,
                 Groups.empty(),

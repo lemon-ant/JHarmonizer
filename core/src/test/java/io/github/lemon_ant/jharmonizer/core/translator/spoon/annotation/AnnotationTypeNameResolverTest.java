@@ -132,8 +132,7 @@ class AnnotationTypeNameResolverTest {
                 SpoonParser.parseJavaSrcFile(createSrcFile(srcQualifiedArrayCode, Path.of("package-info.java")));
         typeModel = parseAstModelFromJavaFixtureResource(TYPE_FIXTURE);
         typeResolver = createResolver(typeModel.getCompilationUnit());
-        // Reuse the fixture without its package clause; a global default-package Deprecated would affect other
-        // fixtures.
+        // Keep the unnamed-package Deprecated local to this test's source.
         String unnamedPackageSrc =
                 readClasspathResourceAsString(SAME_PACKAGE_FIXTURE).replace("package annotationjavalangshadow;", "");
         unnamedPackageModel =
@@ -665,7 +664,7 @@ class AnnotationTypeNameResolverTest {
             assertThat(annotationTypeNameResolution.isCanonicalTypeNameConfirmed())
                     .isFalse();
         });
-        // Matching a known canonical spelling must not turn an unbound use into confirmed container metadata.
+        // The matching spelling is unconfirmed, so the resolver skips container metadata.
         assertThat(dependencyKey).isEqualTo("?." + writtenTypeName);
         assertThat(srcQualifiedArrayModel.getOriginalAnnotationSrcGroups())
                 .filteredOn(group -> group.getStart() == srcOffset)

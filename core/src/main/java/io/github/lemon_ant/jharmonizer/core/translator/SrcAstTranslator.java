@@ -51,7 +51,7 @@ public final class SrcAstTranslator {
     }
 
     /**
-     * Serializes the current AST and selected annotation orders back to source code.
+     * Serializes declarations in AST order and applies selected annotation orders.
      *
      * @param printingInput shared AST and source context with the annotation orders to print
      * @param printerConfig the source printer settings for this invocation

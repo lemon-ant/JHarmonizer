@@ -5,84 +5,15 @@ SPDX-License-Identifier: Apache-2.0
 
 # Explicit sorting results and future source rewrites
 
-## Status and decision
+## Source model and ordering result
 
-The full ordered-content hierarchy remains deferred. The original design was reviewed on 2026-09-21 using Spoon
-11.5.0; the current pipeline already has an explicit `SpoonPrintingInput`, but still depends on mutable Spoon nodes.
-Track the remaining implementation in
-[the backlog](TODO.md#10-explicit-sorting-result-and-support-for-future-source-rewrites).
+The current pipeline sorts Spoon declaration lists in place and carries changed annotation orders separately in
+`SortingResult`. The flow passes both to printing. Source positions refer to the text supplied to the parser.
+See the [sorter](04-Sorter.md) and [source printer](source-printer.md) for their current contracts.
 
-The sorting facade returns the supplied model after in-place sorting and prepared member-relocation diagnostics in
-`SortingResult`, retaining diagnostics as unmodifiable views without defensive copies. It also exposes independent
-annotation and member flags with a computed aggregate. Producers must not mutate handed-off lists. The full
-ordered-content hierarchy and independence from mutable Spoon nodes remain deferred.
-The flow creates `SpoonPrintingInput` from the model and annotation orders in `SortingResult`. The input retains
-the current AST, original source groups, source text/path, skipped types, and sparse sorted annotation orders.
-Sorting results contain no printing context. The input shares existing references without copying the parsed model
-or snapshotting the AST.
-
-The direction is to return one explicit ordering model instead of combining a mutated Spoon AST with
-separately returned annotation orders. Extend this direction to support code transformations before sorting.
-The first migration should preserve current output and sorting algorithms. Semantic rewrites are a separate step.
-
-For the first rewrite features, prefer AST-guided text edits followed by reparsing before sorting. This gives sorting
-and printing the same committed source revision without maintaining two independently editable representations.
-Retain the possibility of incremental synchronization later, if measurements justify its additional contracts.
-
-## Original proposal and current evidence
-
-The original idea was to prepare a richer sorter input and return an immutable hierarchy of sorted types, members,
-and attached annotation fragments that the custom printer can consume directly. It addresses an inconsistent contract:
-
-| Current component | Observable behavior |
-| --- | --- |
-| `SpoonSorter.sortCompilationUnitRecursively` | Mutates declaration lists once and returns a sparse annotation-order map and the declaration-change flag. |
-| `SpoonAnnotationSorter` | Returns changed orders of existing lexical fragments by original group start. Source groups, gaps, and AST annotation lists remain unchanged. |
-| `GroupBoundaryMarker` | Stores separator instructions in metadata on the first member of each group. |
-| `Sorter.sort` | Returns the supplied model after in-place sorting, selected annotation orders, unmodifiable member-relocation lists, independent annotation and member flags with a computed aggregate, and timing. |
-| `AbstractSrcProcessingFlow` | Combines the model and annotation orders in `SortingResult` into `SpoonPrintingInput` only when serialization is needed. |
-| `SpoonSrcPrinter` | Reads current Spoon members, positions, annotation presence, and separator metadata while copying source. |
-| `RelocationDetector` | Computes minimal declaration relocation reports from the original snapshot when check flows need diagnostics. |
-
-The parser prepares annotation fragments, type identities, and preservation keys in `core.translator.spoon.annotation`,
-through
-[`AnnotationSourceScanner.scan`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSourceScanner.java).
-[`SpoonAnnotationSorter`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/sorter/spoon/SpoonAnnotationSorter.java)
-applies the comparator and prepared constraints during sorting. The shared
-[`AnnotationSrcGroup`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java)
-stays beside the scanner to restrict initial group and fragment construction to that package, despite consumers in
-sorting and printing. The scanner creates immutable source groups and prepares gap layouts for separator requirements
-zero, one, and two. The sorter returns only changed fragment orders in `sortedAnnotationSrcFragmentsByGroupSrcStart`;
-the flow passes that same map to the printing input. `SpoonAstModel` retains no post-sort order field.
-`AnnotationSrcGroupRenderer` joins existing fragments with these layouts; source models are never reconstructed.
-Parser-wide type-tree traversal uses
-[`SpoonTypeTreeUtils`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeTreeUtils.java).
-Annotation-only type-name, import, and inheritance helpers stay with their consumers in `translator.spoon.annotation`.
-The neutral `SpoonTypeUtils` retains only operations with actual consumers across processing stages.
-For relocation diagnostics, `core.spoon` co-locates `RelocationDetector`, its package-private
-[`LIS helper`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/spoon/LongestIncreasingSubsequenceUtils.java),
-and the shared `MemberRelocation` model so its constructor remains package-private. Only `Sorter` calls the detector;
-the model is consumed across stages. Other helpers owned by one stage stay beside their consumers even when independent
-of Spoon. Generic names and possible reuse do not justify a neutral package; check actual production consumers of each
-class and method before moving shared operations there.
-
-Original annotation groups remain immutable; the selected output order is separate state. The underlying Spoon AST
-still belongs to a shared working model. Its single-sort claim prevents sorting the same parsed model again with
-another configuration. The deferred design addresses that shared AST boundary rather than mutable annotation inputs.
-
-Spoon does retain annotation lists. The extra source representation exists to retain exact spelling, comments,
-parentheses, and constructs absent from the model. It is inaccurate to say that the Spoon AST cannot contain
-annotations at all. Conversely, its annotation lists cannot replace all existing lexical fragments.
-Only lexical fragments and their separate order map define annotation output order; sorting AST annotation lists
-would duplicate unused work.
-
-`MemberGroupBlock` is a useful starting point: the sorter already computes ordered groups, then marks boundaries and
-flattens the groups back into Spoon lists. Preserve that useful result instead of reconstructing it during printing.
-Keep the existing grouping, accessor clustering, comparators, and dependency-aware ordering algorithms.
-
-The printer is already project-owned and does not inherit from a Spoon printer. Accepting a project-specific result
-requires no compatibility with a Spoon pretty-printer input API. Current behavior is documented in
-[the sorter overview](04-Sorter.md) and [the printer overview](source-printer.md).
+This proposal covers an explicit ordering model that can be rendered independently of later Spoon AST mutations
+and a source-rewrite stage that runs before sorting. Implementation is tracked in the
+[backlog](TODO.md#10-explicit-sorting-result-and-support-for-future-source-rewrites).
 
 ## Proposed boundaries and data
 
@@ -256,17 +187,9 @@ and commit or discard both. Arbitrary Spoon setters followed by best-effort prin
 Complex unsupported edits should be rejected or materialized and reparsed. Event listeners can observe changes, but
 observing a property update does not provide its exact token placement or preserve surrounding comments automatically.
 
-[Spoon's Sniper printer](https://spoon.gforge.inria.fr/custom-pretty-printing.html) explicitly supports rewriting changed
-AST elements while retaining unchanged source. It is a real alternative to evaluate for a defined transformation,
-not an unavailable framework feature. The earlier local Spoon 11.5.0 audit found lost comments in a minimal annotation
-reorder, a position-range exception in a larger fixture, and unavailable original source for a virtual file. These
-observations concern those fixtures, not every Sniper transformation. The runtime audit was not repeated for this note.
-
-That audit's temporary reproducer/logs were stored under `target/annotation-spoon-review/`; they are disposable.
-Permanent annotation coverage is in printer scenarios `17-annotation-fragments` and `18-annotation-language-constructs`.
-The virtual-source constraint is also visible in
-[Spoon 11.5.0 source loading](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/support/reflect/declaration/CtCompilationUnitImpl.java):
-original source is loaded from the backing file. Preserve the exact supplied text independently of filesystem state.
+A rewrite strategy must preserve the supplied source text for virtual files and keep comments attached to the same
+declarations. The [source-printer fixtures](source-printer.md#annotation-scanning-boundary) cover annotation groups
+and type uses that the strategy must preserve.
 
 ## Static conversion is a separate semantic feature
 

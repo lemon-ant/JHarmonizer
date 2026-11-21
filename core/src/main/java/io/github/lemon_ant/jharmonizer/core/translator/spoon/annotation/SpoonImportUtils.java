@@ -28,7 +28,7 @@ import spoon.reflect.reference.CtTypeReference;
 class SpoonImportUtils {
 
     /**
-     * Collects reusable import facts without choosing an annotation identity or validating imported declaration kinds.
+     * Collects the import facts used for annotation lookup in one source file.
      * @param compilationUnit original Spoon model of the source file
      * @param declaredTypesByCanonicalName source declarations indexed by canonical type name
      * @return read-only import names, static-member blockers, all wildcard imports, and their available source owners
@@ -61,6 +61,7 @@ class SpoonImportUtils {
             }
             String canonicalSingleTypeName = extractCanonicalSingleImportTypeName(typeImport);
             if (canonicalSingleTypeName == null) {
+                // TODO Check that it's right
                 // Wildcards and unresolved static imports were handled above; resolved fields and methods remain:
                 // import static java.lang.Integer.MAX_VALUE; -> CtFieldReference
                 // import static java.util.Collections.emptyList; -> CtExecutableReference
@@ -84,22 +85,18 @@ class SpoonImportUtils {
     }
 
     /**
-     * Extracts a formatted type-reference name or the canonical spelling of an unresolved ordinary single import.
-     * Reads Spoon's classification without resolving imports or guessing the kind of an unresolved static member.
+     * Reads a single imported type's name from Spoon's type reference or the canonical spelling of an ordinary import.
      * @param typeImport original parsed import
      * @return type name, or {@code null} for wildcards, field/method references, or unresolved static imports
      */
     @Nullable
     static String extractCanonicalSingleImportTypeName(@NonNull CtImport typeImport) {
         if (typeImport.getReference() instanceof CtTypeReference<?> importedType) {
-            // Wildcard imports use package/member-wildcard references, so this is a single type.
             return formatCanonicalTypeName(importedType);
         }
         if (typeImport instanceof CtUnresolvedImport unresolvedImport
                 && !unresolvedImport.isStatic()
                 && !isWildcardImport(typeImport)) {
-            // JDTImportBuilder always stores the source spelling; a null string requires an incomplete/modified model.
-            // A compilable ordinary single import names a type even when its declaration is unavailable.
             return unresolvedImport.getUnresolvedReference();
         }
         // Unknown static members can denote types, fields, or methods; they provide no definite type name.
@@ -123,19 +120,20 @@ class SpoonImportUtils {
                         && unresolvedImport.getUnresolvedReference().endsWith(".*");
     }
 
-    /** Receives an import already classified as wildcard; source owners may be ordinary classes or interfaces. */
+    /** Finds an available source owner for an import already classified as a wildcard. */
     @Nullable
     private static CtType<?> findSrcWildcardImportOwnerType(
             Map<String, CtType<?>> declaredTypesByCanonicalName, CtImport wildcardImport) {
         if (wildcardImport.getReference()
                 instanceof CtTypeMemberWildcardImportReference wildcardAllStaticTypeMembersImport) {
+            // import static java.lang.annotation.ElementType.*; -> CtTypeMemberWildcardImportReference
             // Our parser loads one source file, so an import owner's source declaration belongs to this file.
             // Keep the type reference's getDeclaration(): external owners return null, not classpath shadows.
             return wildcardAllStaticTypeMembersImport.getTypeReference().getDeclaration();
         }
         if (wildcardImport instanceof CtUnresolvedImport unresolvedImport) {
+            // TODO When  and how??? When it will be CtTypeMemberWildcardImportReference when CtUnresolvedImport
             // Spoon 11.5.0 preserves import p.Owner.* as unresolved even for a source-declared Owner.
-            // Both ordinary and static on-demand type imports require a canonical owner name (JLS 7.5.2/7.5.4).
             String writtenOwnerTypeName = unresolvedImport.getUnresolvedReference();
             // Remove the trailing ".*" (two characters): "p.Owner.*" becomes "p.Owner".
             // The source declaration index needs the owner's type name, without the wildcard suffix.

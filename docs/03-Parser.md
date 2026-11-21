@@ -16,19 +16,9 @@ JHarmonizer uses **[Spoon](https://github.com/INRIA/spoon)** as its single AST l
 The implementation lives in
 `io.github.lemon_ant.jharmonizer.core.translator.spoon`.
 
-The selection criteria (semantic-rich AST, comment/annotation preservation, robust
-re-serialization, Java 21 support) were resolved during the initial POC. Other
-candidates evaluated at the time (JavaParser, Eclipse JDT, ANTLR) are not used.
-
-The decisive advantage of Spoon over a purely syntactic parser is that it does
-**not** stop at a token tree: it provides a fully resolved, navigable object model
-of the type system and of the in-code dependencies (`CtFieldReference`,
-`CtExecutableReference`, `CtTypeReference`, `CtVariableAccess`, etc.). This is what
-makes the declaration-order dependency graph (see
-[`declaration-order-dependencies.md`](declaration-order-dependencies.md)) feasible:
-each `*DependencyProvider` walks the resolved references inside a member's body to
-discover which other members it depends on, instead of guessing from textual
-identifiers.
+Spoon provides declarations, source positions, and references to types and members. Dependency providers use these
+references to identify declarations that must stay in order. The parser builds one model per file in no-classpath
+mode, so some external declarations may be unavailable. [Declaration-order dependencies](declaration-order-dependencies.md).
 
 ## Where it fits in the pipeline
 
@@ -61,40 +51,16 @@ Flow: SortingResult → SpoonPrintingInput → SpoonSrcPrinter → Formatter
 | `SpoonSrcPrinter` / `SrcPrinterOutput` | Standalone source-fragment printing and member layout; see [source printer](source-printer.md). |
 | `SpoonModelBuildException`           | Wraps Spoon parse failures with the offending source path and a human-readable diagnostic.            |
 
-[`AnnotationSrcGroup`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/annotation/AnnotationSrcGroup.java)
-is the shared model beside the scanner, with nested annotation, gap, and private base-fragment types.
-`AnnotationSourceScanner` produces these groups and retains the private parsing state and source-preparation logic.
-The scanner and its type-name, import, inheritance, and dependency preparation helpers belong to
-`translator.spoon.annotation`. Parser-wide tree traversal stays in
-[`SpoonTypeTreeUtils`](../core/src/main/java/io/github/lemon_ant/jharmonizer/core/translator/spoon/SpoonTypeTreeUtils.java).
-The neutral `core.spoon.SpoonTypeUtils` retains only main-type selection, effective member boundaries, and explicit
-source-member traversal used across processing stages.
-For lookup precedence, stopping conditions, and worked examples, see
-[annotation type resolution](annotation-type-resolution.md).
-For the constraints prepared from those results, see [annotation order preservation](annotation-order-preservation.md).
-The groups belong to `SpoonAstModel`, including annotations absent from Spoon's AST. Sorting mutates declaration order
-in the shared AST and returns `sortedAnnotationSrcFragmentsByGroupSrcStart`: only changed groups map from their
-original start offsets to existing fragments in sorted order. Public `SortingResult` also retains the supplied context
-as `sortedSpoonAstModel`, making the post-sort model explicit without constructing a copy. The original groups and AST
-annotation lists remain unchanged. The flow takes both the model and selected orders from that result to assemble
-`SpoonPrintingInput` immediately before serialization. Printing consumes that input together with the flow's
-`PrinterConfig`; annotation order is neither stored in `SpoonAstModel` or `CtCompilationUnit` metadata nor captured by a
-serialization supplier. The printing input shares the working AST without copying the parsed model or snapshotting
-mutable nodes.
-Parsing does not depend on printer settings. The flow passes its immutable configuration to
-`SrcAstTranslator.serialize(printingInput, printerConfig)` for each printing invocation.
-The scanner collects annotations and gaps in separate lists with source bounds and comment ownership. The group
-constructor retains unmodifiable views; callers must not modify the lists after handoff. Group, gap, and layout
-construction and the annotation-fragment builder are package-private. The scanner starts fresh lists for each group
-and prepares moved-gap layouts for separator requirements zero, one, and two. Each layout contains the ready leading
-whitespace and whether the selected annotation's exact separators are required. Fixed gap content and original code
-remain separate and unchanged. An annotation whose line comment already ends with a Unicode escape needs no additional
-physical separator.
-`annotationSrcFragmentsInSrcOrder` always retains source order within its group. The private `srcFragments` sequence
-and `replacementCode` lazily cache the original text. Sorting records a separate order without creating new gaps or groups.
-`AnnotationSrcGroupRenderer` joins that order with the prepared layouts and preserves an original annotation/gap pair
-verbatim. A missing order uses the group's cached original code. Rendering does not analyze source text or reassign
-comment ownership; the source printer only delegates this joining while replacing the original range.
+## Annotation groups
+
+The parser supplies the original source and Spoon model to `AnnotationSourceScanner`. The scanner uses Java tokens
+to find adjacent annotation uses, including array-dimension and receiver annotations omitted by Spoon. For each group
+it records the exact annotation text, source ranges, sorting criteria, and order-preservation keys. It also records
+the gaps and prepares the whitespace needed when an annotation moves.
+
+`SpoonAstModel` holds these groups in source order. The sorter and printer read the same groups.
+See [annotation type resolution](annotation-type-resolution.md), [annotation order preservation](annotation-order-preservation.md),
+and [annotation rendering](source-printer.md#annotation-group-rendering).
 
 ## What is preserved
 
@@ -106,9 +72,7 @@ comment ownership; the source printer only delegates this joining while replacin
 
 ## Java version
 
-`SpoonParser.JAVA_VERSION = 21` — Spoon 11.x is required because earlier Spoon versions
-do not support Java 17+ source compliance levels. See the build memory: minimum runtime
-target is Java 17 (Spoon's own requirement); test compilation targets Java 21.
+`SpoonParser` parses source at Java 21 compliance. The core module targets Java 17 at runtime and Java 21 for tests.
 
 ## Failure mode
 

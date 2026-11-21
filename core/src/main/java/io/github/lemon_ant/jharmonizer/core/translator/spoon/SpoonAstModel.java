@@ -20,15 +20,15 @@ import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-/** Parsed source context and shared working AST; selected print orders belong to {@link SpoonPrintingInput}. */
+/** Parsed source context for sorting and source rendering. */
 @Value
 @Builder(access = PACKAGE)
 @AllArgsConstructor(access = PRIVATE)
 public class SpoonAstModel {
 
     /**
-     * Shared working AST; one sorting attempt consumes it across all model views.
-     * Sorting reorders declarations but preserves annotation lists.
+     * Shared working AST, consumed by a single sorting attempt across all model views.
+     * Sorting changes declaration order in place and reads annotations from source groups.
      */
     @NonNull
     @SuppressFBWarnings("EI_EXPOSE_REP")
@@ -42,7 +42,7 @@ public class SpoonAstModel {
     @NonNull
     JHarmonizerOptOuts optOuts;
 
-    /** Original lexer-derived annotation groups, shared unchanged by sorting and printing. */
+    /** Scanned annotation groups in source order, with their original fragments and gaps. */
     @NonNull
     List<AnnotationSrcGroup> originalAnnotationSrcGroups;
 

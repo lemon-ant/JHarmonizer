@@ -97,30 +97,13 @@ groups. Annotation arguments and arrays of nested annotation values retain their
 the Java lexer supplies the source fragments and the same compiled comparator orders them.
 File and type opt-out directives also disable annotation sorting in their scope.
 
-Repeated annotation types retain their relative source order. Source declarations and explicit canonical imports can
-establish their type identities across written qualifications without loading library classes. Explicit nested
-occurrences also create dependencies: `@Tags({@Tag("first"), @Tag("second")})` retains its position relative to a direct
-`@Tag("third")`. Nested argument content is emitted unchanged. Confirmed distinct types with the same simple name
-remain independent. Different full spellings alone do not establish that distinction: `@library.Base.Tag` and
-`@library.Derived.Tag` can denote the same inherited annotation. When short names, wildcard/static imports, or owner
-hierarchies cannot be resolved, potentially identical types with the same simple name acquire conservative dependencies.
-Those pairs retain their relative order without a warning; independent annotations in the same adjacent group still sort.
-A potentially shared alias does not combine otherwise confirmed distinct types into one dependency family.
+Repeated annotation types retain their relative order, including visible occurrences inside explicit containers.
+When two spellings might refer to the same type, the sorter keeps their relative order and still sorts independent
+annotations. See [annotation order preservation](annotation-order-preservation.md) for examples and key rules.
 
-For example, with `annotations-ordering: alpha`, `@library.Base.Tag("z") @Zulu @library.Derived.Tag("a") @Alpha` becomes
-`@Alpha @library.Base.Tag("z") @library.Derived.Tag("a") @Zulu` when the two `Tag` spellings cannot be distinguished.
-
-When the repeated annotation type is declared in the current source file, its `@Repeatable` metadata relates it to its
-container, including usages with omitted values. This metadata is optional; unavailable library declarations do not
-disable sorting. Without that relationship, a container such as `@Tags` or `@Tags(label = "x")` can hide occurrences in
-its default `value`, even when the container itself is declared locally. Its order relative to direct `@Tag` uses cannot
-be guaranteed; sorting can change the values observed through the container or `getAnnotationsByType`.
-To preserve an affected type's annotation order, use a
-`// @jharmonizer:sort-off` [directive](directives.md) for that type, or disable annotation ordering with
-`annotations-ordering: []`.
-
-See [annotation order preservation](annotation-order-preservation.md) for how the sorter derives and applies these
-constraints.
+Source `@Repeatable` metadata also relates a repeatable type to a container that omits its `value`. Without that
+metadata or visible nested annotations, sorting can change the order returned by `getAnnotationsByType`.
+Use `annotations-ordering: []` or a [`sort-off` directive](directives.md) to preserve an affected group's source order.
 
 ## `header-line`
 

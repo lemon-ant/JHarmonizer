@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
-/** Inspects actual runtime types without initializing them or consulting application source declarations. */
+/** Inspects loaded runtime types and indexes public {@code java.lang} classes without initializing them. */
 @UtilityClass
 public class RuntimeTypeUtils {
 
@@ -39,8 +39,7 @@ public class RuntimeTypeUtils {
     private static final int REQUIRED_MEMBER_TYPE_COUNT = 1;
 
     /**
-     * Finds a public top-level type implicitly imported from the running JDK's {@code java.lang} package.
-     * Builds the immutable platform index once, without initializing the indexed classes.
+     * Finds a public top-level type from the running JDK's {@code java.lang} package in the shared index.
      * @param simpleTypeName one Java type identifier, including any literal '$' characters
      * @return the runtime type, or empty when the name does not identify a public top-level java.lang type
      */
@@ -51,7 +50,7 @@ public class RuntimeTypeUtils {
 
     /**
      * Finds one public member type by name in the owner and its superclass/superinterface hierarchy.
-     * Direct declarations hide inherited declarations even when the direct declaration is not public.
+     * A direct declaration hides inherited declarations. Unique selection is checked before public access.
      * @param ownerType runtime type whose declared and inherited member types are searched
      * @param memberTypeName simple name of the member type
      * @return the unique public member declaration, or empty for absence, ambiguity, or a non-public selection
@@ -108,8 +107,7 @@ public class RuntimeTypeUtils {
         return Stream.concat(Stream.ofNullable(ownerType.getSuperclass()), Stream.of(ownerType.getInterfaces()))
                 .flatMap(parentType -> collectMemberTypesInHierarchy(parentType, memberTypeName).stream())
                 .filter(memberDeclaration -> isMemberTypeAccessibleForInheritance(ownerType, memberDeclaration))
-                // The same declaration reached through both sides of a diamond is one member, not ambiguity.
-                // Different declarations remain ambiguous even if their owners have a subtype relationship.
+                // A declaration reached through several inheritance paths counts once.
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -120,10 +118,7 @@ public class RuntimeTypeUtils {
                 && resourceName.indexOf('/', JAVA_LANG_RESOURCE_PREFIX.length()) < 0;
     }
 
-    /**
-     * Checks member-type access across a parent relationship already established by the caller's traversal.
-     * Checks package access at each step so package-private members cannot reappear after crossing a package boundary.
-     */
+    /** Checks one inheritance step so package-private members stay hidden after crossing a package boundary. */
     private static boolean isMemberTypeAccessibleForInheritance(Class<?> inheritingType, Class<?> memberDeclaration) {
         int memberModifiers = memberDeclaration.getModifiers();
         if (Modifier.isPrivate(memberModifiers)) {

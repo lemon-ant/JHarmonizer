@@ -17,11 +17,8 @@ import org.apache.commons.lang3.Validate;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Flexible overlay for UnifiedConfig. Each field is individually optional, but at least one must be set.
- * Use UnifiedConfigMerger.merge(baseline, overlay) to produce a strict UnifiedConfig.
- * This class does NOT define defaults and does NOT invent values.
- * Root member groups are merged only at the root level when provided.
- * Annotation criteria are wrapped without copying; callers must not mutate the supplied list.
+ * Overrides for {@link UnifiedConfig}, with at least one field set.
+ * {@link UnifiedConfigMerger} inherits omitted values from the baseline.
  */
 @Value
 @Getter(AccessLevel.NONE)
@@ -63,8 +60,8 @@ public class FlexibleUnifiedConfig {
     UnifiedTopLevelTypesOrdering topLevelTypesOrdering;
 
     /**
-     * Creates a new FlexibleUnifiedConfig.
-     * @param annotationOrderingRules optional annotation criteria; empty disables annotation sorting
+     * Creates an overlay with read-only views of supplied collections.
+     * @param annotationOrderingRules replacement annotation criteria, with an empty list preserving source order
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled
@@ -103,8 +100,8 @@ public class FlexibleUnifiedConfig {
     }
 
     /**
-     * Returns the optional annotation ordering rules override.
-     * @return rules in priority order; an empty list explicitly preserves source order
+     * Returns the annotation ordering override.
+     * @return replacement rules in priority order, or no value to inherit the baseline rules
      */
     @NonNull
     public Optional<List<UnifiedAnnotationOrderingRule>> getAnnotationOrderingRules() {

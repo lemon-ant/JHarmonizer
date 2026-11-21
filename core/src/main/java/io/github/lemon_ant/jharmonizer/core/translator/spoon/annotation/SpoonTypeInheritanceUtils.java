@@ -30,19 +30,17 @@ class SpoonTypeInheritanceUtils {
     private static final int MAX_UNAMBIGUOUS_DECLARATIONS = 1;
 
     /**
-     * Finds a uniquely inherited member type using superclass and superinterface declarations in one source file.
-     * Stops each branch at a direct declaration, including private types that are not inherited.
-     * Missing declarations block only branches that must be searched for the requested member name.
-     * @param compilationUnit original Spoon model of the source file containing the lookup scope
+     * Finds a uniquely inherited member type in the available parent declarations. A matching declaration closes
+     * its branch. Private members contribute no candidate. An unavailable parent on an open branch blocks lookup.
+     * @param compilationUnit original Spoon model of the source file
      * @param ownerType type whose inherited members are searched
      * @param memberTypeName simple name of the inherited member type
-     * @return found declaration, absence, or an unresolved result for needed unavailable or ambiguous parents
+     * @return a unique declaration, a conclusive miss, or an unresolved result for an unavailable or ambiguous search
      */
     @NonNull
     @SuppressWarnings("PMD.UseConcurrentHashMap")
     static InheritedMemberTypeLookupResult findInheritedMemberTypeDeclaration(
             @NonNull CtCompilationUnit compilationUnit, @NonNull CtType<?> ownerType, @NonNull String memberTypeName) {
-        // All traversal state belongs to this synchronous lookup and is discarded on return.
         Queue<CtTypeReference<?>> parentTypesToVisit = new ArrayDeque<>();
         streamParentTypeReferences(ownerType).forEach(parentTypesToVisit::add);
         Set<String> visitedTypeNames = new HashSet<>();
@@ -56,7 +54,8 @@ class SpoonTypeInheritanceUtils {
             CtType<?> declaredMemberType = parentDeclaration.getNestedType(memberTypeName);
             if (declaredMemberType != null) {
                 if (!declaredMemberType.hasModifier(ModifierKind.PRIVATE)) {
-                    // CtType.equals compares structure; canonical names distinguish homonyms and deduplicate diamonds.
+                    // TODO What does it means reached through several inheritance paths
+                    // Canonical names deduplicate a declaration reached through several inheritance paths.
                     inheritedDeclarationsByCanonicalName.put(
                             formatCanonicalTypeName(declaredMemberType.getReference()), declaredMemberType);
                 }
@@ -68,11 +67,13 @@ class SpoonTypeInheritanceUtils {
                 streamParentTypeReferences(parentDeclaration).forEach(parentTypesToVisit::add);
             }
         }
-        return computeInheritedMemberTypeLookupResult(inheritedDeclarationsByCanonicalName);
+        return computeInheritedMemberTypeLookupResult(
+                /* TODO Pass collection of values */ inheritedDeclarationsByCanonicalName);
     }
 
     /** Converts canonical candidates into absence, one declaration, or ambiguity. */
     @NonNull
+    // TODO Rename the method, this is a real converter
     private static InheritedMemberTypeLookupResult computeInheritedMemberTypeLookupResult(
             Map<String, CtType<?>> inheritedDeclarationsByCanonicalName) {
         if (inheritedDeclarationsByCanonicalName.size() > MAX_UNAMBIGUOUS_DECLARATIONS) {
@@ -108,7 +109,7 @@ class SpoonTypeInheritanceUtils {
         return Stream.concat(srcType.getSuperInterfaces().stream(), superclass);
     }
 
-    /** Outcome of a source inheritance lookup; absence is distinct from an unavailable or ambiguous branch. */
+    /** A unique inherited declaration, a conclusive miss, or an unresolved inheritance search. */
     @Value
     @Getter(AccessLevel.PACKAGE)
     @AllArgsConstructor(access = AccessLevel.PRIVATE)

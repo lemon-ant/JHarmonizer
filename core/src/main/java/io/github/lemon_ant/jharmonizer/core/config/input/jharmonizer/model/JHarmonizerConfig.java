@@ -10,12 +10,7 @@ import lombok.NonNull;
 import lombok.Value;
 import org.apache.commons.lang3.Validate;
 
-/**
- * Root deserialization model for a JHarmonizer YAML configuration file.
- * Holds formatting settings, backup flag, header-line descriptor,
- * member-group ordering definitions, and top-level type ordering.
- * Annotation criteria are wrapped without copying; callers must not mutate the supplied list.
- */
+/** Complete settings read from a JHarmonizer YAML configuration. */
 @Value
 public class JHarmonizerConfig {
 
@@ -39,10 +34,9 @@ public class JHarmonizerConfig {
     @NonNull
     JHarmonizerTopLevelTypesOrdering topLevelTypesOrdering;
 
-    // TODO Make it package
     /**
-     * Creates a new JHarmonizerConfig.
-     * @param annotationOrderingRules annotation criteria in priority order
+     * Creates a complete configuration with read-only views of supplied collections.
+     * @param annotationOrderingRules annotation criteria in priority order, retained as a read-only view
      * @param topLevelTypesOrdering the top level types ordering
      * @param formatting the formatting
      * @param backupsEnabled the backups enabled

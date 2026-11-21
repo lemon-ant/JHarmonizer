@@ -48,8 +48,8 @@ public class JHarmonizerFlexibleConfig {
     /**
      * Creates a flexible JHarmonizer configuration with optional overlay values.
      *
+     * @param annotationOrderingRules replacement annotation criteria, with an empty list preserving source order
      * @param topLevelTypesOrdering the optional top-level types ordering override
-     * @param annotationOrderingRules optional annotation criteria; empty disables annotation sorting
      * @param formatting the optional partial formatting override
      * @param backupsEnabled the optional backups-enabled override
      * @param processingStatisticsMode the optional processing-statistics-mode override
@@ -87,8 +87,8 @@ public class JHarmonizerFlexibleConfig {
     }
 
     /**
-     * Returns the optional annotation ordering rules override.
-     * @return rules in priority order; an empty list explicitly preserves source order
+     * Returns the annotation ordering override.
+     * @return replacement rules in priority order, or no value to inherit the baseline rules
      */
     @NonNull
     public Optional<List<JHarmonizerAnnotationOrderingRule>> getAnnotationOrderingRules() {

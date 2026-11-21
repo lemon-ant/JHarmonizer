@@ -9,11 +9,8 @@ import lombok.NonNull;
 import lombok.Value;
 
 /**
- * Carries either a confirmed canonical name or an unconfirmed name for conservative grouping.
- * Source declarations, single-type imports, or runtime java.lang declarations in module context can establish identity.
- * An unconfirmed name retains the original spelling or adds supported package context. It does not authorize source
- * metadata lookup. Lookup blockers and insufficient evidence retain the written name with confirmation disabled.
- * The resolver selects the name and its evidence; constructors retain explicit state or adapt that evidence.
+ * Carries the selected annotation type name and its canonical-identity confirmation.
+ * Repeatable metadata lookup requires a confirmed name. Unconfirmed names support conservative order preservation.
  */
 @Value
 @Getter(AccessLevel.PACKAGE)
@@ -29,7 +26,7 @@ class AnnotationTypeNameResolution {
 
     /**
      * Retains the canonical name from a successful declaration/import lookup.
-     * @param canonicalTypeNameLookupResult successful lookup whose selected declaration/import was validated
+     * @param canonicalTypeNameLookupResult successful declaration or import lookup
      * @throws IllegalArgumentException if the lookup did not establish a name
      */
     AnnotationTypeNameResolution(@NonNull CanonicalAnnotationTypeNameLookupResult canonicalTypeNameLookupResult) {
@@ -42,7 +39,7 @@ class AnnotationTypeNameResolution {
     }
 
     /**
-     * Retains a fallback name without confirming its canonical identity or whether its declaration is external.
+     * Retains an unconfirmed fallback name.
      * @param annotationTypeName original written name or name inferred from context
      */
     AnnotationTypeNameResolution(@NonNull String annotationTypeName) {

@@ -90,10 +90,8 @@ Stages 1–4 return an internal lookup result. That outcome determines whether t
 | Confirmed name | Return the canonical annotation type name with `canonicalTypeNameConfirmed = true`. |
 | `UNRESOLVED` | Stop immediately and return the written name with `canonicalTypeNameConfirmed = false`. |
 
-The final result, `AnnotationTypeNameResolution`, always holds a name and the confirmation flag. Stage 5 can confirm
-a name in a module descriptor. Its other paths return either the written name or an unconfirmed contextual name.
-The flag controls whether downstream processing can use the name to retrieve source repeatable metadata. A matching
-string in the declaration index leaves an unconfirmed name unconfirmed. The `?.` prefix belongs to the dependency key.
+`AnnotationTypeNameResolution` carries the selected name and its confirmation flag. The dependency-key resolver uses
+that flag to decide whether the name can identify source repeatable metadata.
 
 JHarmonizer expects compilable Java and the original, unmodified parsed model. An available declaration selected as
 the final annotation type must be an annotation interface. A known wrong kind fails processing for the file.
@@ -237,12 +235,10 @@ A binding to a source declaration still needs evidence that the written path den
 3. Confirm the AST binding only when the package-qualified path or at least one wildcard owner found the same
    canonical annotation name and no check blocked it. Otherwise return `UNRESOLVED`.
 
-The parser indexes available wildcard owners once, keyed by the identity of the original import. For
-`import static demo.Owner.*;` represented by a wildcard member reference, it reads the owner's source declaration.
-Spoon 11.5.0 can retain `import demo.Owner.*;` as unresolved even with `Owner` declared in this file. The context
-then looks up `demo.Owner` in the canonical declaration index after removing `.*`. A wildcard makes an owner's
-members available, so the written path starts at a member. Use the order supplied by the parsed model when checking
-these cases. [Spoon import builder].
+The parser indexes source owners by import identity. A wildcard member reference supplies its owner declaration.
+Spoon 11.5.0 can leave `import demo.Owner.*;` unresolved even when the file declares `Owner`. The parser then looks
+up `demo.Owner` in the source declaration index. The written path starts at an imported member of that owner.
+[Spoon import builder].
 
 In the package binding fixture, `@annotationbindings.PackageAnnotationDerived.Tag` has no enclosing type. Stage 2
 has no top-level type named `annotationbindings`, and stage 3 has no matching import. Stage 4 strips the package
@@ -257,17 +253,11 @@ the meaning of the first segment. Stage 4 retains unconfirmed `annotationwildcar
 
 ### When Spoon has no binding for the use
 
-With Spoon 11.5.0 on JDK 21, the AST traversal omits some usages that the independent source scanner sees. Reproduced
-examples include `@java.lang.Deprecated module example {}`, an array dimension such as `String @Tag [] values`, and
-an explicit receiver such as `void execute(@Tag Example this) {}` with a type-use annotation. A source declaration
-may still be present. Stages 1 and 2 can resolve a relative path such as `MultiHopOwnerDerived.Inner.Tag` from the
-available declarations, and stage 3 can confirm a matching single import. A package-prefixed array annotation can
-miss all three stages and then reach stage 5, since stage 4 needs the binding for that specific use.
-[Annotation scanning boundary](source-printer.md#annotation-scanning-boundary).
-
-Separately, tests set an annotation's position to `SourcePosition.NOPOSITION` to exercise a missing index entry.
-That setup deliberately modifies the model for the test. The three examples above are observations from unmodified
-parsed source.
+Spoon 11.5.0 on JDK 21 can omit uses such as `@java.lang.Deprecated module example {}` and the array and receiver
+annotations in the [type-use fixture](source-printer.md#annotation-scanning-boundary). Earlier stages can still
+resolve a relative path or an exact single import. A package-prefixed array annotation that misses those stages
+reaches stage 5 because stage 4 requires a binding for that use. Separate tests deliberately set a position to
+`SourcePosition.NOPOSITION` to exercise a missing index entry.
 
 ## 5. Select a fallback and check file context
 

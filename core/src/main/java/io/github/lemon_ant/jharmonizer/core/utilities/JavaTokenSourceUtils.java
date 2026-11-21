@@ -14,19 +14,15 @@ import lombok.experimental.UtilityClass;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 
 /**
- * Measures original Java token spellings in UTF-16 code units and reads lexical text blocks independently of Spoon
- * or annotation syntax. The measured value is source length, not the number of tokens.
- * Accepts complete token ranges already validated by JDT, not arbitrary source slices. Unicode translation preserves
- * original offsets; Java string escapes remain lexical. Text-block indentation is normalized with
- * {@link String#stripIndent()}.
+ * Measures original Java token spellings in UTF-16 code units and reads text-block tokens.
+ * Both operations require complete token ranges from the JDT lexer.
  */
 @UtilityClass
 public class JavaTokenSourceUtils {
 
     /**
-     * Measures one token's original spelling in UTF-16 code units, excluding comment terminators and incidental
-     * text-block whitespace. Summing these lengths excludes gaps between tokens: {@code @Alpha ( 123 )} spans 14
-     * source units, while its five token lengths sum to {@code 1 + 5 + 1 + 3 + 1 = 11}.
+     * Measures the original token spelling, excluding line-comment terminators and incidental text-block
+     * whitespace. Text-block line separators are measured after normalization.
      * @param srcCode original source already validated lexically by JDT
      * @param start first original token offset
      * @param endExclusive first offset after the original token
@@ -47,7 +43,8 @@ public class JavaTokenSourceUtils {
     }
 
     /**
-     * Reads a text block as translated lexical tokens with its delimiters and without incidental indentation.
+     * Reads a text block after Unicode translation, retaining delimiters and Java string escape spellings.
+     * {@link String#stripIndent()} normalizes its incidental whitespace and line endings.
      * @param srcCode original source already validated lexically by JDT
      * @param start first offset of the opening delimiter
      * @param endExclusive first offset after the closing delimiter

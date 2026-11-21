@@ -22,7 +22,7 @@ public enum FileProcessingStatus {
     ;
 
     /**
-     * Resolves the resulting processing status from the observed relocation and formatting outcomes.
+     * Gives declaration or annotation reordering precedence over formatting changes.
      *
      * @param reordered whether declaration or annotation order changed
      * @param contentChanged whether the produced source text differs from the original

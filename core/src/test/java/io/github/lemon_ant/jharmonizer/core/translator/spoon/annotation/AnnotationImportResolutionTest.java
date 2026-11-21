@@ -57,8 +57,7 @@ class AnnotationImportResolutionTest {
                 dependencyResolver.resolveAnnotationCanonicalTypeNameOrGroupKey(annotationSrcStartOffset, "Deprecated");
 
         // Then
-        // Spoon 11.5.0 collects imports through a HashSet; source order alone does not establish this precondition.
-        // This fixture supplies the required order in the original parsed model without rearranging its imports.
+        // Assert the import order in the parsed model because it can differ from source order.
         assertThat(typeImportContext.getWildcardImportsInModelOrder())
                 .singleElement()
                 .isSameAs(compilationUnit.getImports().getFirst());

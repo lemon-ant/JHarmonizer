@@ -16,28 +16,13 @@ flowchart LR
     Translator --> Printer[SpoonSrcPrinter]
 ```
 
-`SpoonParser` stores the original source, annotation fragments, and opt-outs in `SpoonAstModel`.
-`SpoonSorter` returns selected annotation orders and the declaration-change flag; public `SortingResult` adds the
-supplied model after in-place sorting, requested member diagnostics, and timing. The returned `sortedSpoonAstModel`
-is the same context instance, with its current declaration order. Sorting has no dependency on the printer or its input
-model. Immediately before serialization, `AbstractSrcProcessingFlow` takes the model and orders from `SortingResult`
-to assemble one `SpoonPrintingInput` containing the source groups, working AST, source text/path, skipped types, and
-selected annotation orders needed by printing. The parsed model keeps no sorted annotation-order map and is not copied
-to attach sorting output. File-level opt-outs that reuse source text bypass sorting and printing without creating
-this input.
-The flow retains its immutable `PrinterConfig` and passes it to
-`SrcAstTranslator.serialize(printingInput, printerConfig)`. The translator forwards that input and settings to the
-stateless `SpoonSrcPrinter`; no printer instance is stored. The same printing input can be serialized with different
-settings without reparsing or retaining settings in the model. Direct printing without sorting uses an empty selected
-annotation-order map.
-The printing input shares the original groups and current Spoon nodes. Declaration order still changes in place;
-this context is not an independent AST snapshot. Main-type context and the original-member snapshot remain in
-`SpoonAstModel` for other consumers rather than being passed to the printer.
-Source and opt-out views and the selected-order map are already read-only when handed off. The input retains them
-without a second wrapper or defensive copy; producers must not modify handed-off maps or fragment lists.
-The printer uses Spoon declarations and source positions; all output code belongs to this project.
-It neither inherits from Spoon printers nor regenerates declarations through `CtElement.toString()`.
-Parsing and sorting do not depend on printer settings.
+Before serialization, the flow builds `SpoonPrintingInput` from the working model and changed annotation orders in
+`SortingResult`. The input shares the current Spoon nodes, original source and groups, and skipped types. The flow
+passes `PrinterConfig` separately, so the same input can be printed with different settings. Direct printing with
+source annotation order uses an empty order map.
+
+`SpoonSrcPrinter` uses Spoon declaration order and source positions to copy original text and insert group separators.
+The printer generates layout and keeps the copied source text, including declaration bodies and comments.
 
 | Component | Responsibility |
 | --- | --- |
@@ -67,48 +52,27 @@ directly. Interior line endings remain unchanged; generated lines use the domina
 CRLF, LF, CR tie precedence. The complete serialized source is not cached.
 
 Each call creates a private `Serialization` with its own configuration reference, output buffer and range map.
-Source text, annotation order, skipped types and the Spoon AST come from `SpoonPrintingInput`; configuration is passed
-separately and the printer has no shared state. `SrcPrinterOutput` indexes each `AnnotationSrcGroup` by its original
-start.
-At a group boundary it delegates text joining to `AnnotationSrcGroupRenderer`, passing the optional selected order from
-`sortedAnnotationSrcFragmentsByGroupSrcStart`, and continues after the original group end. It does not decide
-separator ownership or inspect original source to prepare gap text.
-The same range-copying method handles fragments inside types and entire files without declared types, including
-`package-info.java` and `module-info.java`, without adding whitespace to those files.
-The standalone `AnnotationSrcGroup` model owns its nested annotation, gap, and private base-fragment types.
-`AnnotationSourceScanner` collects `AnnotationSrcFragment` and `AnnotationSrcGap` in separate lists. Both extend
-`SrcFragment` with text and original source bounds. The scanner alone constructs those source models. The group
-constructor requires one gap per annotation and retains unmodifiable views; producers must not modify handed-off
-lists. The scanner allocates fresh lists for each group. A private helper lazily interleaves the source-order lists,
-and each group caches its original `replacementCode`. Original annotations, gaps, and source ranges never change.
-Each gap stores original code, fixed content, and three scanner-prepared moved layouts, indexed by required separator
-count zero, one, or two. A layout records whether the annotation's exact separators must be emitted and which leading
-whitespace follows them. It shares fixed gap content instead of storing complete strings for every annotation/slot pair.
-`SpoonAnnotationSorter` returns only changed orders of existing fragments. The renderer joins these fragments with
-the selected layouts without source analysis, new gap/group instances, or comment-ownership decisions.
-Ordinary whitespace and independent comment blocks stay in their slots. Prepared layouts supply separators required
-by trailing line comments or attached lower comment blocks when the destination gap cannot retain them.
-An annotation that stays in its original slot retains its unmodified gap, even when other group members move.
-For example, the blank gap in `@B\n\n@A` stays between the sorted annotations; the terminator of `@B // note\n@A`
-must also follow `@B` when it moves. These are separate ownership rules, so blindly concatenating annotations with
-their original trailing whitespace would change the output.
-Whether to emit an annotation's separators depends on its destination gap after sorting. In
-`@A // note\r\n@B\n@C `, moving A to B's slot reuses the gap's `\n`; moving A to C's inline slot requires A's `\r\n`.
-The scanner knows both fragments and gaps, but their final pairing is selected later. A single separator string per
-annotation cannot represent both outcomes. Preparing complete strings for every possible annotation/slot pair would
-require a table that grows quadratically with the group's size.
-The original groups and separate order map determine annotation output order; AST annotation lists retain their parsed
-order and provide annotation presence for spacing decisions and positions for declaration boundaries.
-The result wraps the collected map once. Later calls cannot alter earlier output or ranges, and
-calls for independent inputs may run concurrently with different configurations. Failed calls leave no shared state.
 
-Spoon 11.5.0 provides correct member positions for the existing enum lambda/body regressions. The old
-enum correction, which generated text and searched it with a regular expression, has been removed.
-Spoon 11.5.0 reports `CommentedAnnotation` in printer scenario `21-annotation-group-gaps` as starting at a comment after
-both annotations. `findEffectiveMemberStart` includes those earlier annotations and retains leading comments already
-covered by the reported range. Recheck this correction after the next Spoon GA upgrade.
-The fixture expectations are the compatibility reference, except for
-the source-tail behavior described below.
+## Annotation group rendering
+
+`SrcPrinterOutput` indexes groups by their original start. When copying source, it asks `AnnotationSrcGroupRenderer`
+for each group's replacement text and resumes after the original group end. The same path handles groups inside
+types and in `package-info.java` or `module-info.java`.
+
+Each group contains source-order annotation fragments and one gap per fragment. The changed order map gives the
+fragments for each output slot. With no entry for the group, the printer uses its original text. A fragment that
+occupies its original slot keeps its original gap verbatim.
+
+When a fragment moves, attached comments travel with the annotation and independent comments stay in their original
+slots. The scanner prepares three layouts per gap, for fragments that need zero, one, or two line separators.
+The selected layout supplies the leading whitespace and determines whether to use the fragment's exact separator text.
+A fixed number of layouts per slot keeps preparation linear in group size.
+
+For example, in `@A // note\r\n@B\n@C `, moving `@A` to the second slot reuses that gap's `\n`. Moving it to
+the inline third slot uses its own `\r\n` so the next token stays outside the comment. See the
+[comment attachment rules](config-dsl.md#annotations-ordering).
+
+## Source tail and group separators
 
 The source tail starts after the greatest original end offset among top-level types, independently of
 their output order. `printTail` skips the leading gap, retains indentation, and copies the remaining
@@ -123,7 +87,6 @@ The tail can also contain empty top-level declarations (`;`), allowed by
 [JLS 7.6](https://docs.oracle.com/javase/specs/jls/se21/html/jls-7.html#jls-7.6), or a terminal ASCII SUB
 character, allowed by [JLS 3.5](https://docs.oracle.com/javase/specs/jls/se21/html/jls-3.html#jls-3.5).
 Copying through the source end preserves these forms, including Unicode escapes, without parsing them again.
-This intentionally replaces normalized footer rendering with source preservation before optional formatting.
 
 `SpoonGroupSeparatorUtils` in `core.spoon` keeps the metadata key and blank-line marker private.
 Callers assign headers with `markHeader`, assign blank lines with `markBlankLine`, and read once
@@ -137,43 +100,13 @@ owns comment-position checks, duplicate-header detection and combined spacing de
 
 ## Annotation scanning boundary
 
-Reviewed on 2026-09-27 with Spoon 11.5.0 and JDK 21. Retain JDT token scanning as the source of annotation groups;
-do not restrict scanning to positions obtained from Spoon's annotation nodes.
+`AnnotationSourceScanner` uses JDT tokens to find adjacent annotation uses and capture their ranges, argument
+spelling, and comment ownership directly from the supplied source. Spoon contributes declaration structure and
+type references. The token scan also covers uses that Spoon omits, such as the array-dimension annotations in
+`String @Z @A [] @D @C []` and the receiver annotations in `void run(@Z @A Example this) {}`.
 
-Spoon provides annotation lists, recursive element queries, and source positions through
-[`CtElement`](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/reflect/declaration/CtElement.java).
-These APIs describe the modeled elements. They do not establish that every written annotation has a model node.
-The existing `18-annotation-language-constructs/input/TypeUseAnnotationOrdering.java` fixture demonstrates the gap:
-debugger logpoints in `SpoonParser` and `SrcAstTranslator` observed only six annotations in a recursive `CtAnnotation`
-query of the main type, versus twelve lexical annotations within that type.
+The printer fixtures check complete output, compilation, and repeated processing. The
+[type-use fixture][type-use-fixture] includes both cases. See [annotation type resolution](annotation-type-resolution.md)
+for the role of Spoon references when confirming annotation identities.
 
-| Source location | Recursive Spoon query | Lexical scanner |
-| --- | --- | --- |
-| Generic argument, type parameter, and return type | 6 | 6 |
-| Two array dimensions in `String @Z @A [] @D @C []` | 0 | 4 |
-| Receiver parameter `@Z @A TypeUseAnnotationOrdering this` | 0 | 2 |
-
-The four `@Target` annotations on the fixture's annotation declarations are outside the main type and excluded from
-these counts. This result concerns the configured Spoon version and fixture, not a general absence of type-use support.
-
-The original-source-fragment API also has limits:
-[`CtCompilationUnitImpl`](https://github.com/INRIA/spoon/blob/v11.5.0/src/main/java/spoon/support/reflect/declaration/CtCompilationUnitImpl.java)
-rejects fragment roots for `module-info.java` and `package-info.java` models, and lazily loads original text from the
-backing file.
-The scanner instead consumes the supplied source string, including virtual sources without a backing file.
-
-`AnnotationSourceScanner` uses JDT's existing
-[`IScanner`](https://help.eclipse.org/latest/topic/org.eclipse.jdt.doc.isv/reference/api/org/eclipse/jdt/core/compiler/IScanner.html)
-token API, which supplies token kinds, original source positions, and token text with Unicode escapes decoded.
-It does not build a second Java AST. Scanning also supplies lexical adjacency, written argument order, parentheses,
-and comment/separator ownership needed by the sorting contract. Spoon remains responsible for declaration structure,
-dependencies, opt-outs, and declaration boundaries.
-
-Using AST annotations first would still require scanning the remaining source to find omitted groups and process gaps,
-then reconciling both inventories. Keep one lexical inventory unless a measured alternative preserves the same output
-and source ranges. Recheck this decision when upgrading Spoon or changing annotation discovery.
-
-`SpoonParserTest.parseJavaSrcFile_arrayAndReceiverAnnotations_preservesLexicalSourceGroups` checks the exact group
-bounds and source text for the omitted groups using the existing fixture. It does not require Spoon to keep omitting
-them. The shared printer E2E runner checks full output, compilation, and repeated processing for annotation fixtures,
-including comments, package/module declarations, records, and type uses.
+[type-use-fixture]: ../core/src/test/resources/test-cases/core/e2e/printer/scenarios/18-annotation-language-constructs/input/TypeUseAnnotationOrdering.java

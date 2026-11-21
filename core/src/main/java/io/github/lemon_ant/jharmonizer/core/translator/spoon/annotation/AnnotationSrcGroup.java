@@ -17,7 +17,7 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 
-/** Immutable annotation fragments, source slots, and placement layouts prepared once by the scanner. */
+/** One group of adjacent annotation uses with an annotation fragment and a following gap at each source slot. */
 @Value
 public class AnnotationSrcGroup {
 
@@ -30,13 +30,10 @@ public class AnnotationSrcGroup {
     @NonNull
     List<AnnotationSrcGap> annotationSrcGapsInSrcOrder;
 
-    /** First source offset after the final gap, before the following Java token. */
+    /** Exclusive end of the original group, including the final gap. */
     int endExclusive;
 
-    /**
-     * Original group text, computed once from source-order fragments.
-     * Other annotation orders are rendered from the same immutable pieces without replacing this group.
-     */
+    /** Original group text, including all gaps. */
     @Getter(lazy = true)
     @NonNull
     String replacementCode =
@@ -64,10 +61,10 @@ public class AnnotationSrcGroup {
     }
 
     /**
-     * Retains read-only views and lazily pairs each annotation with the gap at the same index.
-     * Callers must not modify either list after handoff. The final annotation also requires a gap, possibly empty.
+     * Retains read-only views of the lists. Callers must leave their backing lists unchanged after handoff.
+     * The final annotation also requires a gap, which may be empty.
      * @param annotationSrcFragmentsInSrcOrder annotations in original source order
-     * @param annotationSrcGapsInSrcOrder gap slots in original source order, with all placement layouts prepared
+     * @param annotationSrcGapsInSrcOrder gaps in original source order, with prepared layouts
      * @param start first offset of the original group
      * @param endExclusive first source offset after the original group
      * @throws IllegalArgumentException if annotations are empty or the two lists have different sizes
@@ -88,19 +85,15 @@ public class AnnotationSrcGroup {
         this.endExclusive = endExclusive;
     }
 
-    /**
-     * Prepared source text and sorting keys for one annotation, including its attached comments.
-     * Separators required by trailing comments remain separate so existing destination line breaks can be reused.
-     */
+    /** Source text, attached comments, and ordering metadata for one annotation use. */
     @Value
     @EqualsAndHashCode(callSuper = true)
     @ToString(callSuper = true)
     public static class AnnotationSrcFragment extends SrcFragment {
 
         /**
-         * Offset of the opening {@code @}, used for relocation detection and opt-out ranges.
-         * The inherited {@link SrcFragment#getStart()} includes attached leading comments and can be earlier.
-         * For {@code @A\n// note\n@B}, the second fragment starts at {@code //}, while this offset points to {@code @B}.
+         * Offset of the opening {@code @}, used for opt-out ranges. The fragment itself starts at any attached
+         * leading comment.
          */
         int annotationStart;
 
@@ -109,22 +102,15 @@ public class AnnotationSrcGroup {
         AnnotationDescriptor descriptor;
 
         /**
-         * Minimum physical line separators needed after this fragment's trailing comments.
-         * {@code @A @B} needs zero; {@code @A // note\n@B} needs one to terminate the line comment;
-         * {@code @A\n// below\n\n@B} needs two so the lower comment remains attached to A when reordered.
-         * These separators are not part of the fragment's source text.
+         * Minimum number of physical separators after the fragment. Use one for a line comment whose terminator
+         * lies outside the fragment, or two to retain the blank line after an attached lower comment block.
          */
         int trailingLineSeparatorCount;
 
-        /**
-         * Original separators to insert when the destination gap has too few retained separators.
-         * Moving {@code @A // note} into the space before B in {@code @C @B} needs A's line separator;
-         * moving {@code @A\n// below} there needs its following blank line to keep the comment attached to A.
-         */
+        /** Original separators to insert if the destination gap supplies too few. */
         @NonNull
         String trailingLineSeparators;
 
-        // Explicit construction initializes the inherited source range; callers use named builder arguments.
         @Builder(access = AccessLevel.PACKAGE)
         private AnnotationSrcFragment(
                 int annotationStart,
@@ -150,7 +136,7 @@ public class AnnotationSrcGroup {
         }
     }
 
-    /** Ready gap prefix and whether the annotation's exact separator text precedes it. */
+    /** Leading whitespace to use after a moved annotation, with a flag for inserting its original separators first. */
     @Value
     @Getter(AccessLevel.PACKAGE)
     @AllArgsConstructor(access = AccessLevel.PACKAGE)
@@ -161,13 +147,13 @@ public class AnnotationSrcGroup {
         String leadingWhitespace;
     }
 
-    /** Original gap text and scanner-prepared whitespace layouts for possible annotation placements. */
+    /** Original gap text and whitespace layouts for a moved annotation. */
     @Value
     @EqualsAndHashCode(callSuper = true)
     @ToString(callSuper = true)
     static class AnnotationSrcGap extends SrcFragment {
 
-        /** Fixed comments and text shared by every placement of this source gap. */
+        /** Gap text after its leading whitespace, shared by all layouts. */
         @Getter(AccessLevel.PACKAGE)
         @NonNull
         String content;
@@ -197,7 +183,7 @@ public class AnnotationSrcGroup {
         }
     }
 
-    /** Immutable scanner-prepared fragment text and its original source range. */
+    /** A source fragment's text and half-open range in the original file. */
     @Value
     @NonFinal
     @AllArgsConstructor(access = AccessLevel.PRIVATE)

@@ -16,15 +16,15 @@ import spoon.reflect.declaration.CtTypeMember;
 import spoon.reflect.declaration.CtTypeParameter;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-/** Traverses source type trees and reported ranges while the translator prepares the processing model. */
+/** Traverses Spoon type declarations and identifies enclosing types by their reported source ranges. */
 @UtilityClass
 public class SpoonTypeTreeUtils {
 
     /**
-     * Collects types whose ranges reported by Spoon contain the source offset, from inner to outer scopes.
-     * @param srcTypes precomputed types from one source file
+     * Finds types whose valid ranges reported by Spoon contain the given offset.
+     * @param srcTypes indexed types from one source file
      * @param srcOffset source offset to locate
-     * @return unmodifiable list ordered by descending source start, excluding types without valid positions
+     * @return unmodifiable list ordered by decreasing reported start, so inner types usually precede outer types
      */
     @NonNull
     public static List<CtType<?>> collectEnclosingSrcTypes(@NonNull List<CtType<?>> srcTypes, int srcOffset) {
@@ -41,12 +41,13 @@ public class SpoonTypeTreeUtils {
     }
 
     /**
-     * Collects source type declarations that can enclose a use, including local and anonymous classes.
-     * These visibility scopes are separate from the top-level/member trees used for canonical declaration indexes.
+     * Indexes types for enclosing-type lookup, including local and anonymous classes.
+     * Canonical declaration indexes use only top-level and member types.
      * @param compilationUnit original Spoon model of the source file
-     * @return unmodifiable type scopes in Spoon traversal order
+     * @return unmodifiable list of types in Spoon traversal order
      */
     @NonNull
+    // TODO I do not see indexing, I do not understand Scopes in the name, this is types finding
     public static List<CtType<?>> collectSrcTypeScopes(@NonNull CtCompilationUnit compilationUnit) {
         return compilationUnit.getDeclaredTypes().stream()
                 .flatMap(rootType -> rootType.getElements(new TypeFilter<CtType<?>>(CtType.class)).stream())

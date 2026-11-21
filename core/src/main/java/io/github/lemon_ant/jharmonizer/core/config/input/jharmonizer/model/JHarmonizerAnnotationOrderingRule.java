@@ -21,7 +21,7 @@ public enum JHarmonizerAnnotationOrderingRule {
     private final UnifiedAnnotationOrderingRule unifiedOrderingRule;
 
     /**
-     * Parses a case-insensitive, hyphenated ordering criterion.
+     * Parses an ordering criterion case-insensitively, accepting hyphens or underscores.
      * @param value configured criterion
      * @return matching criterion
      */

@@ -14,19 +14,16 @@ import lombok.Value;
 import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtType;
 
-/**
- * Source-printing context with independently selected annotation orders.
- * Retains the shared working AST and existing read-only source and ordering views without copying source models.
- */
+/** Working AST, original source, and selected annotation orders used by the source printer. */
 @Value
 public class SpoonPrintingInput {
 
-    /** Shared working AST in its current declaration order, including any in-place sorting. */
+    /** Shared working AST in the declaration order to print. */
     @NonNull
     @SuppressFBWarnings("EI_EXPOSE_REP")
     CtCompilationUnit compilationUnit;
 
-    /** Original scanner groups; missing sorted-order entries retain their source order. */
+    /** Original annotation groups. A group without a selected order prints in source order. */
     @NonNull
     List<AnnotationSrcGroup> originalAnnotationSrcGroups;
 
@@ -44,10 +41,10 @@ public class SpoonPrintingInput {
     String srcCode;
 
     /**
-     * Extracts the printer's source context and retains already read-only sorting output.
-     * Producers must not modify handed-off source groups, order maps, or their fragment lists.
-     * @param sortedModel working model after sorting, whose shared AST has the declaration order to print
-     * @param sortedAnnotationSrcFragmentsByGroupSrcStart read-only changed orders, or an empty map for source order
+     * Retains the supplied model's source context and read-only annotation orders. Producers must keep the
+     * source groups, order map, and fragment lists unchanged.
+     * @param sortedModel working model with the declaration order to print
+     * @param sortedAnnotationSrcFragmentsByGroupSrcStart read-only map of changed annotation orders
      */
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP2",

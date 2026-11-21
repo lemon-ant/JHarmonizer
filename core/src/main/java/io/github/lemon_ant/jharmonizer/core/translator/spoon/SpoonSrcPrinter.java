@@ -31,19 +31,15 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtTypeMember;
 
-/**
- * Stateless source-fragment printer with explicit configuration for each call.
- * Each invocation owns its output buffer and skipped-type ranges.
- */
+/** Renders declarations and annotation groups from the original source using per-call settings. */
 @UtilityClass
 public final class SpoonSrcPrinter {
 
     /**
-     * Prints the current declaration order with independent state for each invocation.
-     * Calls for independent models may run concurrently with different configurations.
+     * Prints declarations in AST order and annotations in the selected source-fragment order.
      * @param printingInput working AST, selected annotation orders, original source, and excluded types
      * @param printerConfig the spacing configuration for this invocation
-     * @return printed source and immutable skipped-type ranges, independent of subsequent calls
+     * @return printed source and immutable skipped-type ranges
      */
     @NonNull
     public static SerializedSrcWithSkippedTypeRanges serializeCompilationUnit(

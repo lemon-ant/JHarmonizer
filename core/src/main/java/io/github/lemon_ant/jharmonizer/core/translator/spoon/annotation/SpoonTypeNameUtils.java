@@ -13,19 +13,15 @@ import spoon.reflect.reference.CtTypeReference;
 class SpoonTypeNameUtils {
 
     /**
-     * Formats a named, non-array reference using dots between its recorded declaring types.
-     * Owner references do not require available declarations; this method never calls {@code getDeclaration()}.
-     * For example, {@code pkg.Outer$Tag} becomes {@code pkg.Outer.Tag}; a top-level {@code pkg.Dollar$Tag}
-     * and the identifiers in {@code pkg.Dollar$Owner.Tag$Kind} retain their '$'.
-     * Uses only the nesting recorded by Spoon; does not infer missing owners or resolve type aliases.
+     * Formats a named, non-array reference using dots between the declaring-type links recorded by Spoon.
+     * For example, a nested {@code pkg.Outer$Tag} becomes {@code pkg.Outer.Tag}. A {@code $} within an identifier
+     * stays intact, as in top-level {@code pkg.Dollar$Tag}. This formatting works with unavailable declarations.
      * @param typeReference named, non-array type reference to format
      * @return qualified name with dot-separated declaring types
      */
     @NonNull
     static String formatCanonicalTypeName(@NonNull CtTypeReference<?> typeReference) {
         CtTypeReference<?> declaringTypeReference = typeReference.getDeclaringType();
-        // No owner reference means getQualifiedName() adds no nesting separator; any '$' belongs to an identifier.
-        // Replacing every '$' would corrupt legal names such as the top-level annotation Dollar$Tag.
         return declaringTypeReference == null
                 ? typeReference.getQualifiedName()
                 : formatCanonicalTypeName(declaringTypeReference) + '.' + typeReference.getSimpleName();
@@ -48,8 +44,7 @@ class SpoonTypeNameUtils {
     }
 
     /**
-     * Matches a type-name prefix at complete name-segment boundaries, without resolving declarations or inheritance.
-     * For prefix {@code Owner}, accepts {@code Owner} and {@code Owner.Tag}, but rejects {@code OwnerOther.Tag}.
+     * Matches complete leading name segments. For example, {@code Owner} matches {@code Owner.Tag}.
      * @param typeNameToCheck tokenized type name to inspect
      * @param expectedTypeNamePrefix complete name segments expected at the beginning
      * @return {@code true} for an exact match or a prefix followed by a dot

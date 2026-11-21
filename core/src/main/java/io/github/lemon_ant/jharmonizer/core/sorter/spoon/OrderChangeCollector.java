@@ -38,7 +38,7 @@ class OrderChangeCollector {
         return new ElementOrdering<>(Collections.unmodifiableList(elementsInSortedOrder), accumulator.reordered);
     }
 
-    /** Prepared element order and its change flag, which may describe order within the elements. */
+    /** Final element order and its change flag. */
     @Value
     @AllArgsConstructor(access = AccessLevel.PACKAGE)
     static class ElementOrdering<TElement> {

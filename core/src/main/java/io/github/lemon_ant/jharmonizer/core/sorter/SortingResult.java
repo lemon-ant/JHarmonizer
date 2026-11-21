@@ -12,24 +12,21 @@ import java.util.Map;
 import lombok.NonNull;
 import lombok.Value;
 
-/**
- * Result of sorting all members in a single source file.
- * Bundles the working model after sorting, selected annotation orders, relocation diagnostics, change flags, and timing.
- * The model retains its shared mutable AST; selected annotation orders remain separate from its source groups.
- */
+/** Sorted source context, changed annotation orders, requested member diagnostics, and timing for one file. */
 @Value
 public class SortingResult {
 
     @NonNull
     List<MemberRelocation> memberRelocations;
 
-    /** Whether this sorting invocation changed Spoon declaration order, including top-level types. */
+    /** Whether Spoon declaration order changed, including top-level types. */
     boolean membersReordered;
 
+    /** Sorted fragment lists for changed annotation groups, indexed by original group start. */
     @NonNull
     Map<Integer, List<AnnotationSrcFragment>> sortedAnnotationSrcFragmentsByGroupSrcStart;
 
-    /** Same model supplied to the sorter, after its shared AST's declaration order has been sorted in place. */
+    /** The input model with its shared AST sorted in place. */
     @NonNull
     SpoonAstModel sortedSpoonAstModel;
 
@@ -37,12 +34,12 @@ public class SortingResult {
     SortingStatistic sortingStatistic;
 
     /**
-     * Retains sorting output with an unmodifiable view of its member diagnostics.
-     * @param memberRelocations the requested diagnostics; callers must not modify this list after handoff
-     * @param membersReordered whether this invocation changed Spoon declaration order, including top-level types
-     * @param sortedAnnotationSrcFragmentsByGroupSrcStart read-only changed annotation orders by original group start
-     * @param sortedSpoonAstModel the supplied working model after in-place declaration sorting
-     * @param sortingStatistic the sorting and relocation-detection timing
+     * Retains the sorting output. The supplied diagnostics list backs a read-only view and must stay unchanged.
+     * @param memberRelocations requested member diagnostics
+     * @param membersReordered whether Spoon declaration order changed
+     * @param sortedAnnotationSrcFragmentsByGroupSrcStart read-only map of changed annotation orders
+     * @param sortedSpoonAstModel working model after declaration sorting
+     * @param sortingStatistic time for sorting and requested diagnostics
      */
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP2",
@@ -61,18 +58,12 @@ public class SortingResult {
         this.sortingStatistic = sortingStatistic;
     }
 
-    /**
-     * Reports whether this invocation selected a different annotation order for any source group.
-     * @return whether the changed-order map is non-empty
-     */
+    /** Returns whether any source annotation group changed order. */
     public boolean isAnnotationsReordered() {
         return !sortedAnnotationSrcFragmentsByGroupSrcStart.isEmpty();
     }
 
-    /**
-     * Reports whether declaration or annotation order changed.
-     * @return whether either independent sorting flag is set
-     */
+    /** Returns whether any declaration or annotation order changed. */
     public boolean isReordered() {
         return isAnnotationsReordered() || membersReordered;
     }

@@ -10,14 +10,14 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.Nullable;
 
-/** Joins scanner-prepared text pieces in a selected annotation order without changing source models. */
+/** Renders annotation groups from their source fragments and prepared whitespace layouts. */
 @UtilityClass
 public class AnnotationSrcGroupRenderer {
 
     /**
-     * Renders a permutation of existing source fragments using the scanner's prepared gap layouts.
-     * Layout selection never reads source text or computes indentation or separator requirements.
-     * @param sourceGroup immutable group prepared by the scanner
+     * Writes the selected fragments into the group's original gap slots. Each gap retains its exact text when
+     * its original annotation precedes it. A moved annotation selects a layout by its separator requirement.
+     * @param sourceGroup group prepared by the scanner
      * @param annotationOrder selected fragments, or {@code null} to retain the original source text
      * @return complete replacement text for the group's original source range
      * @throws IllegalArgumentException if the selected order has a different number of annotations
@@ -38,10 +38,12 @@ public class AnnotationSrcGroupRenderer {
             AnnotationSrcGap gap = sourceGaps.get(slotIndex);
             replacement.append(annotation.getSrcCode());
             if (annotation.getEndExclusive() == gap.getStart()) {
+                // TODO What does it mean???
                 // Stable source offsets also recognize fragments recreated during dependency-key preparation.
                 replacement.append(gap.getSrcCode());
                 continue;
             }
+            // TODO Add understandable src examples
             // Sorting chooses the annotation/gap pair after scanning: in @A // note\r\n@B\n@C class Sample {},
             // moving A to B's slot reuses its LF gap; moving A to C's inline slot needs A's CRLF.
             // One fixed separator string on A cannot represent both placements.

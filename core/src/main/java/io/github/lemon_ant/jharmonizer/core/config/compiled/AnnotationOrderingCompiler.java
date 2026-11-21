@@ -14,9 +14,9 @@ import lombok.experimental.UtilityClass;
 class AnnotationOrderingCompiler {
 
     /**
-     * Chains criteria in their configured priority order.
-     * @param annotationOrderingRules annotation criteria in priority order; empty preserves source order
-     * @return compiled comparator, retaining source order on complete ties
+     * Uses each criterion to break ties under the preceding criteria.
+     * @param annotationOrderingRules criteria in priority order
+     * @return comparator that reports a tie for every pair if the list is empty
      */
     @NonNull
     static Comparator<AnnotationDescriptor> compile(

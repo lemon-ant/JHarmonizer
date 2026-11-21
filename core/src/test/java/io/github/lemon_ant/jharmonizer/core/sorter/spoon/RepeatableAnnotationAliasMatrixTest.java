@@ -50,7 +50,7 @@ class RepeatableAnnotationAliasMatrixTest {
 
     @BeforeAll
     void setUp() {
-        // Parse once without modifying Spoon's model. The E2E runner compiles and executes this same fixture.
+        // Use the original Spoon model of the same fixture tested end to end.
         List<AnnotationSrcGroup> annotationGroups =
                 parseAstModelFromJavaFixtureResource(FIXTURE).getOriginalAnnotationSrcGroups();
         aliasPairGroups = annotationGroups.stream()
@@ -119,7 +119,7 @@ class RepeatableAnnotationAliasMatrixTest {
             @NonNull String description, @NonNull AnnotationSrcGroup annotationGroup) {
         List<AnnotationSrcFragment> repeatedAnnotations = annotationGroup.getAnnotationSrcFragmentsInSrcOrder();
         assertThat(repeatedAnnotations).as(description).hasSize(2);
-        // Candidate key sets may differ between uses; a shared key is the actual dependency contract.
+        // One shared key is enough to preserve relative order.
         assertThat(repeatedAnnotations.getFirst().getDescriptor().getOrderPreservationGroupKeys())
                 .as(description)
                 .containsAnyElementsOf(

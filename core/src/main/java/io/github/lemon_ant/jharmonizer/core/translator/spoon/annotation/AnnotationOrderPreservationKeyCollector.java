@@ -13,35 +13,30 @@ import java.util.Set;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
-/** Prepares annotation dependency keys without merging potentially distinct type identities. */
+/** Adds possible alias keys to annotations in one source group. */
 @UtilityClass
 class AnnotationOrderPreservationKeyCollector {
     private static final int MIN_GROUP_KEYS_FOR_ALIAS_EXPANSION = 2;
 
     /**
-     * Adds conservative dependency keys for possible aliases and source-declared repeatable relationships.
-     * Each list entry is one outer annotation's key set, including keys of annotations nested in its arguments.
-     * The list covers only the adjacent outer annotations currently being parsed.
-     * For {@code @Envelope({@Nested}) @Marker int first; @Nested int second;}, the calls receive
-     * {@code [{Envelope, Nested}, {Marker}]} and {@code [{Nested}]} respectively (type qualification omitted).
-     * Reuses input sets that already contain all candidates. Input collections must be unmodifiable;
-     * producers must not mutate their backing collections after handoff.
-     * @param rootGroupKeyByAnnotationTypeName confirmed canonical type names mapped to terminal group keys;
-     *                                         confirmed input keys require terminal self-mappings
-     * @param groupKeysPerAnnotationInSrcOrder one key set per outer annotation of the current adjacent sequence
-     * @return unmodifiable expanded key sets in an unmodifiable list in the original annotation order
+     * Expands unconfirmed keys by matching simple names against the group's original keys and both ends
+     * of each source repeatable relationship. The result can share its input collections, so callers must
+     * provide read-only collections and leave their backing collections unchanged.
+     * @param rootGroupKeyByAnnotationTypeName file-wide map from confirmed type names to terminal group keys
+     * @param groupKeysPerAnnotationInSrcOrder one key set per outer annotation in this group, including nested uses
+     * @return read-only key sets in a read-only list in the original annotation order
      * @throws IllegalStateException if a confirmed input key has no terminal self-mapping in the file-wide cache
      */
     @NonNull
     static List<Set<String>> collect(
             @NonNull Map<String, String> rootGroupKeyByAnnotationTypeName,
             @NonNull List<Set<String>> groupKeysPerAnnotationInSrcOrder) {
-        // Possible identities add ordering constraints; they do not confirm an annotation's type.
         Map<String, Set<String>> candidateGroupKeysByInputGroupKey =
                 collectCandidateGroupKeys(rootGroupKeyByAnnotationTypeName, groupKeysPerAnnotationInSrcOrder);
-        // Singleton candidate sets add no keys; validation still runs before this fast path.
+        // Every singleton candidate set contains only its original key.
         if (candidateGroupKeysByInputGroupKey.values().stream()
-                .allMatch(candidateGroupKeys -> candidateGroupKeys.size() == 1)) {
+                .allMatch(candidateGroupKeys ->
+                        candidateGroupKeys.size() == /*TODO Introduce a constant with a meaningful name*/ 1)) {
             return groupKeysPerAnnotationInSrcOrder;
         }
         return groupKeysPerAnnotationInSrcOrder.stream()
@@ -109,8 +104,9 @@ class AnnotationOrderPreservationKeyCollector {
                 .allMatch(groupKey -> originalGroupKeys.containsAll(candidateGroupKeysByInputGroupKey.get(groupKey)))) {
             return originalGroupKeys;
         }
-        // Keep alternatives per occurrence: confirmed A and B retain {A} and {B}, while uncertain U can use {U, A, B}.
-        // Expand once; merging these sets transitively would also constrain the independent confirmed annotations.
+        // TODO Add examples
+        // Expand only original keys. An ambiguous use can share keys with two confirmed types while
+        // each confirmed type retains its own set.
         Set<String> expandedGroupKeys = new HashSet<>(originalGroupKeys);
         originalGroupKeys.forEach(
                 groupKey -> expandedGroupKeys.addAll(candidateGroupKeysByInputGroupKey.get(groupKey)));

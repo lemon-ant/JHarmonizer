@@ -21,7 +21,7 @@ public class SpoonAnnotationSorterTestUtils {
      * Finds a changed order or retains the group's original annotation sequence.
      * @param group original scanned group
      * @param annotationOrderByGroupSrcStart changed orders keyed by group source start
-     * @return selected annotation order without creating source fragments
+     * @return selected order of existing fragments
      */
     @NonNull
     public static List<AnnotationSrcFragment> findAnnotationOrder(

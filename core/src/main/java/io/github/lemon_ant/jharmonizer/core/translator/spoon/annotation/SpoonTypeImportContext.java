@@ -13,21 +13,20 @@ import lombok.Value;
 import spoon.reflect.declaration.CtImport;
 import spoon.reflect.declaration.CtType;
 
-/**
- * Prepared type-import facts and source owners keyed by the original wildcard-import instances.
- * The constructor retains read-only collection views; producers must not mutate the inputs after handoff.
- */
+/** Import facts shared across annotation lookup in one source file. */
 @Value
 @Getter(AccessLevel.PACKAGE)
 class SpoonTypeImportContext {
 
+    // TODO  Comment
     @NonNull
     Set<String> canonicalSingleTypeNames;
 
+    // TODO  Comment
     @NonNull
     Map<String, CtImport> singleTypeImportsBySimpleName;
 
-    /** Only available source owners, indexed by import identity rather than structural equality. */
+    /** Available source owners keyed by the identity of the original wildcard import. */
     @NonNull
     Map<CtImport, CtType<?>> srcOwnerTypesByWildcardImport;
 
@@ -36,10 +35,6 @@ class SpoonTypeImportContext {
      * Includes unresolved imports and imports Spoon represents only as fields or methods.
      * For example, {@code import static library.Owner.Tag;} may also import an inherited type Tag that Spoon 11.5.0
      * omits from the import model even when it reports a same-name field. Neither shape proves the annotation identity.
-     * If stages 1-2 and definite single-type imports have not resolved or blocked the lookup, a matching first
-     * segment ({@code @Tag} or {@code @Tag.Nested}) makes stage 3 return terminal {@code UNRESOLVED}.
-     * Later AST/context guesses are skipped; the resolver retains the original written annotation name as unconfirmed.
-     * These entries are blockers, not type identities: same-name imports from different owners share one entry.
      */
     @NonNull
     Set<String> unresolvableStaticMemberSimpleNames;
@@ -49,8 +44,7 @@ class SpoonTypeImportContext {
     List<CtImport> wildcardImportsInModelOrder;
 
     /**
-     * Retains read-only views of the prepared import facts, preserving wildcard-import identity and model order.
-     * Producers must not mutate the supplied collections after construction.
+     * Retains read-only views. The supplied collections must remain unchanged after construction.
      * @param canonicalSingleTypeNames canonical names established by single-type imports
      * @param singleTypeImportsBySimpleName definite single-type imports indexed by simple type name
      * @param srcOwnerTypesByWildcardImport available source owners indexed by original wildcard-import identity

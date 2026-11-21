@@ -87,13 +87,8 @@ abstract class AbstractSrcProcessingFlow implements IFlow {
     }
 
     /**
-     * Performs the two-step check: sorting first, then formatting only if sorting passed.
-     * If sorting violations are detected the formatting step is skipped because formatting an
-     * incorrectly sorted file would produce meaningless results.
-     *
-     * <p>The {@code stopOnViolation} flag controls whether the returned result signals a pipeline
-     * stop when a violation is found. Pass {@code true} for fail-fast flows and {@code false} for
-     * check-all flows.
+     * Checks declaration and annotation order before formatting. A sorting violation returns
+     * member relocations and, when annotation order changed, a diff against the serialized source.
      *
      * @param srcFile the source file being processed
      * @param parsedSpoonAstModel the parsed Spoon AST model for the source file
@@ -295,7 +290,6 @@ abstract class AbstractSrcProcessingFlow implements IFlow {
     @NonNull
     protected final SortingSerializationAndFormattingResult sortSerializeAndFormatSrc(
             @NonNull SrcFile srcFile, @NonNull SpoonAstModel parsedSpoonAstModel, @NonNull String sortingDescription) {
-        // REORDER reports change flags; detailed relocation lists are only consumed by check flows.
         SortingAndSerializationResult sortingAndSerializationResult =
                 sortAndSerializeOrReuseOriginalSrc(srcFile, parsedSpoonAstModel, sortingDescription, false);
         SortingResult sortingResult = sortingAndSerializationResult.getSortingResult();

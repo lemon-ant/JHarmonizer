@@ -89,6 +89,7 @@ class SpoonTypeMemberUtils {
                 firstJavaDocStart = firstCommentStart;
             }
         }
+        // TODO check that examples and description is valid
         // Without a package/import, Spoon can attach type comments to the source-file model (CtCompilationUnit).
         // The loop collected one adjacent block of any length, with no blank line or source text between its
         // comments and the first type. If only whitespace precedes this block, treat it as reaching the file start.
@@ -146,6 +147,7 @@ class SpoonTypeMemberUtils {
     @UtilityClass
     private static final class CommentGapPatterns {
 
+        // TODO Check that it's right
         /**
          * Matches the entire gap between a comment and the following comment or type declaration.
          * Allows spaces, tabs ({@code \t}), and form feeds ({@code \f}) around zero or one line separator:
